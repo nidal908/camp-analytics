@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة تحليلات استهلاك مياه المخيم</title>
+  
+  <!-- مكتبة الرسوم البيانية Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg: #0b1329;
+      --card-bg: #152238;
+      --border: #233554;
+      --text: #f8fafc;
+      --muted: #8892b0;
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 16px; line-height: 1.5; min-height: 100vh; }
+    
+    .container { max-width: 1100px; margin: 0 auto; display: none; }
+    
+    /* شاشة القفل برمز PIN */
+    #lockScreen { position: fixed; inset: 0; background: var(--bg); display: flex; justify-content: center; align-items: center; z-index: 999; padding: 16px; }
+    .lock-box { background: var(--card-bg); border: 1px solid var(--border); padding: 28px; border-radius: 14px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .lock-box h2 { font-size: 1.25rem; color: var(--primary); margin-bottom: 8px; }
+    .lock-box p { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; }
+    .lock-input { width: 100%; padding: 12px; font-size: 1.4rem; text-align: center; letter-spacing: 6px; border: 1px solid var(--border); border-radius: 8px; background: #0b1329; color: #fff; outline: none; margin-bottom: 16px; }
+    .lock-input:focus { border-color: var(--primary); }
+    .btn-unlock { width: 100%; background: var(--primary-dark); color: #fff; border: none; padding: 12px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-unlock:hover { background: #0369a1; }
+    .lock-error { color: var(--danger); font-size: 0.85rem; margin-top: 10px; display: none; }
+
+    /* اللوحة الرئيسية */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+    .header h1 { font-size: 1.35rem; color: var(--primary); }
+    .btn-action { background: var(--primary-dark); color: #fff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.85rem; }
+    .btn-action:hover { background: #0369a1; }
+    
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .metric-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+    .metric-card span { font-size: 0.8rem; color: var(--muted); display: block; margin-bottom: 6px; }
+    .metric-card strong { font-size: 1.5rem; color: var(--primary); }
+
+    .panel { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 24px; overflow-x: auto; }
+    .panel h2 { font-size: 1.05rem; color: #fff; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: right; min-width: 550px; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; background: rgba(255,255,255,0.02); }
+    tr:hover { background: rgba(255,255,255,0.03); }
+
+    .tag { display: inline-block; padding: 2px 7px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; }
+    .tag-blue { background: rgba(56, 189, 248, 0.15); color: var(--primary); }
+    .tag-green { background: rgba(52, 211, 153, 0.15); color: var(--success); }
+
+    .chart-container { position: relative; width: 100%; height: 320px; }
+    .loading-msg { text-align: center; padding: 30px; color: var(--muted); font-size: 1rem; }
+  </style>
+</head>
+<body>
+
+  <!-- شاشة التحقق برمز PIN -->
+  <div id="lockScreen">
+    <div class="lock-box">
+      <h2>🔒 لوحة التحليلات الخاصة</h2>
+      <p>أدخل رمز PIN لعرض البيانات الإحصائية</p>
+      <input type="password" id="pinInput" class="lock-input" maxlength="10" placeholder="••••" onkeydown="if(event.key==='Enter') checkUnlock()">
+      <button class="btn-unlock" onclick="checkUnlock()">دخول</button>
+      <div id="lockError" class="lock-error">رمز PIN غير صحيح</div>
+    </div>
+  </div>
+
+  <div class="container" id="mainContainer">
+    <div class="header">
+      <div>
+        <h1>📊 لوحة تحليلات استهلاك مياه المخيم</h1>
+        <p style="font-size:0.8rem; color:var(--muted); margin-top:2px;">تحليل الموارد واختبار فرضية مرونة وفورات الحجم (العلاقة غير الخطية)</p>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-action" onclick="fetchHistoryData()">🔄 تحديث</button>
+        <button class="btn-action" style="background:#059669;" onclick="exportToCSV()">📥 تصدير CSV (Excel)</button>
+        <button class="btn-action" style="background:#475569;" onclick="lockDashboard()">🔒 قفل</button>
+      </div>
+    </div>
+
+    <div id="loading" class="loading-msg">جاري قراءة البيانات التاريخية من السحابة...</div>
+
+    <div id="dashboardContent" style="display: none;">
+      <!-- كروت الملخص الكلي -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span>إجمالي الدورات المؤرشفة</span>
+          <strong id="metricCycles">0</strong>
+        </div>
+        <div class="metric-card">
+          <span>إجمالي السحب التراكمي</span>
+          <strong id="metricTotalConsumed">0 لتر</strong>
+        </div>
+        <div class="metric-card">
+          <span>متوسط استهلاك المخيم بالدورة</span>
+          <strong id="metricAvgCycle">0 لتر</strong>
+        </div>
+        <div class="metric-card">
+          <span>متوسط نصيب الفرد بالدورة</span>
+          <strong id="metricPerCapita">0 لتر / فرد</strong>
+        </div>
+      </div>
+
+      <!-- اختبار وفورات الحجم والمرونة -->
+      <div class="panel">
+        <h2>
+          <span>اختبار وفر الحجم (متوسط استهلاك الفرد حسب حجم الأسرة)</span>
+          <span style="font-size:0.8rem; color:var(--muted); font-weight:normal;">المعامل النظري المعتمد: α = 0.58</span>
+        </h2>
+        <div class="chart-container" style="margin-bottom: 18px;">
+          <canvas id="elasticityChart"></canvas>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>حجم الأسرة (الأفراد)</th>
+              <th>عدد الحالات المسجلة</th>
+              <th>متوسط سحب الأسرة بالدورة</th>
+              <th>متوسط نصيب الفرد الواحد</th>
+              <th>وفر الاستهلاك مقارنة بالفئات الأصغر</th>
+            </tr>
+          </thead>
+          <tbody id="elasticityTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- سجل الدورات التاريخية -->
+      <div class="panel">
+        <h2>سجل الدورات السابقة المؤرشفة</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>تاريخ إغلاق الدورة</th>
+              <th>إجمالي السكان</th>
+              <th>المياه المتاحة</th>
+              <th>المستهلك فعلياً</th>
+              <th>نسبة الاستهلاك</th>
+              <th>طريقة التوزيع</th>
+            </tr>
+          </thead>
+          <tbody id="cyclesTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- استهلاك العائلات التراكمي -->
+      <div class="panel">
+        <h2>أداء العائلات عبر كافة الدورات</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>اسم العائلة</th>
+              <th>عدد الأفراد</th>
+              <th>مجموع السحب التراكمي</th>
+              <th>متوسط السحب بالدورة</th>
+              <th>متوسط نصيب الفرد في الأسرة</th>
+            </tr>
+          </thead>
+          <tbody id="familiesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const AUTH_PIN = "399411";
+    const FIREBASE_HISTORY_URL = "https://camp-water-default-rtdb.europe-west1.firebasedatabase.app/camp_history.json";
+    let rawHistoryData = {};
+    let elasticityChartInstance = null;
+
+    function checkUnlock() {
+      const pin = document.getElementById('pinInput').value.trim();
+      if (pin === AUTH_PIN) {
+        document.getElementById('lockScreen').style.display = 'none';
+        document.getElementById('mainContainer').style.display = 'block';
+        fetchHistoryData();
+      } else {
+        document.getElementById('lockError').style.display = 'block';
+      }
+    }
+
+    function lockDashboard() {
+      document.getElementById('pinInput').value = '';
+      document.getElementById('lockError').style.display = 'none';
+      document.getElementById('lockScreen').style.display = 'flex';
+      document.getElementById('mainContainer').style.display = 'none';
+    }
+
+    async function fetchHistoryData() {
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('dashboardContent').style.display = 'none';
+
+      try {
+        const resp = await fetch(FIREBASE_HISTORY_URL);
+        const data = await resp.json();
+        
+        if (!data || Object.keys(data).length === 0) {
+          document.getElementById('loading').textContent = 'لا توجد بيانات تاريخية مؤرشفة بعد في camp_history.';
+          return;
+        }
+
+        rawHistoryData = data;
+        processAndRenderAnalytics(data);
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('dashboardContent').style.display = 'block';
+      } catch (err) {
+        document.getElementById('loading').textContent = 'فشل الاتصال بقاعدة البيانات. تأكد من توفر الإنترنت.';
+      }
+    }
+
+    function processAndRenderAnalytics(data) {
+      const cycleKeys = Object.keys(data);
+      const totalCycles = cycleKeys.length;
+
+      let grandTotalConsumed = 0;
+      let totalPopRecorded = 0;
+
+      const sizeMap = {};
+      const familyMap = {};
+      const cyclesList = [];
+
+      cycleKeys.forEach(key => {
+        const cycle = data[key];
+        const summary = cycle.summary || {};
+        const cycleConsumed = summary.totalConsumed || 0;
+        const cyclePop = summary.totalPop || 0;
+
+        grandTotalConsumed += cycleConsumed;
+        totalPopRecorded += cyclePop;
+
+        cyclesList.push({
+          date: cycle.closedAtStr || '—',
+          timestamp: cycle.cycleTimestamp || 0,
+          pop: cyclePop,
+          totalWater: summary.totalWater || 0,
+          consumed: cycleConsumed,
+          mode: (cycle.settings && cycle.settings.distMode) || 'elasticity'
+        });
+
+        const fams = cycle.families || [];
+        fams.forEach(f => {
+          const m = parseInt(f.members) || 0;
+          const c = parseFloat(f.consumed) || 0;
+
+          if (m > 0) {
+            if (!sizeMap[m]) sizeMap[m] = { totalLitres: 0, occurrences: 0 };
+            sizeMap[m].totalLitres += c;
+            sizeMap[m].occurrences += 1;
+          }
+
+          if (!familyMap[f.name]) {
+            familyMap[f.name] = { members: m, totalLitres: 0, appearances: 0 };
+          }
+          familyMap[f.name].totalLitres += c;
+          familyMap[f.name].appearances += 1;
+        });
+      });
+
+      // المؤشرات
+      document.getElementById('metricCycles').textContent = totalCycles;
+      document.getElementById('metricTotalConsumed').textContent = Math.round(grandTotalConsumed) + ' لتر';
+      document.getElementById('metricAvgCycle').textContent = Math.round(grandTotalConsumed / totalCycles) + ' لتر';
+      
+      const avgPerCapita = totalPopRecorded > 0 ? (grandTotalConsumed / (totalPopRecorded / totalCycles)) / totalCycles : 0;
+      document.getElementById('metricPerCapita').textContent = avgPerCapita.toFixed(1) + ' لتر';
+
+      // تحليل المرونة والوفر
+      renderElasticityAnalysis(sizeMap);
+
+      // جدول الدورات
+      const cBody = document.getElementById('cyclesTableBody');
+      cBody.innerHTML = '';
+      cyclesList.sort((a,b) => b.timestamp - a.timestamp);
+      cyclesList.forEach(c => {
+        const pct = c.totalWater > 0 ? ((c.consumed / c.totalWater) * 100).toFixed(1) : 0;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><strong>${c.date}</strong></td>
+          <td>${c.pop} فرد</td>
+          <td>${c.totalWater} لتر</td>
+          <td style="color:var(--primary); font-weight:bold;">${c.consumed} لتر</td>
+          <td><span class="tag tag-green">${pct}%</span></td>
+          <td>${getDistModeLabel(c.mode)}</td>
+        `;
+        cBody.appendChild(row);
+      });
+
+      // جدول العائلات
+      const fBody = document.getElementById('familiesTableBody');
+      fBody.innerHTML = '';
+      Object.keys(familyMap).forEach(name => {
+        const fam = familyMap[name];
+        const avgPerCycle = (fam.totalLitres / fam.appearances).toFixed(1);
+        const perCapitaInFam = fam.members > 0 ? (avgPerCycle / fam.members).toFixed(1) : 0;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><strong>${name}</strong></td>
+          <td>${fam.members} أفراد</td>
+          <td>${fam.totalLitres} لتر</td>
+          <td style="color:var(--primary); font-weight:bold;">${avgPerCycle} لتر</td>
+          <td><span class="tag tag-blue">${perCapitaInFam} لتر / فرد</span></td>
+        `;
+        fBody.appendChild(row);
+      });
+    }
+
+    function renderElasticityAnalysis(sizeMap) {
+      const sizes = Object.keys(sizeMap).map(Number).sort((a,b) => a - b);
+      const eBody = document.getElementById('elasticityTableBody');
+      eBody.innerHTML = '';
+
+      const labels = [];
+      const actualFamilyAvgs = [];
+      const actualPerCapitaAvgs = [];
+
+      sizes.forEach((s, idx) => {
+        const total = sizeMap[s].totalLitres;
+        const occ = sizeMap[s].occurrences;
+        const famAvg = total / occ;
+        const perCapita = famAvg / s;
+
+        labels.push(s + ' أفراد');
+        actualFamilyAvgs.push(famAvg.toFixed(1));
+        actualPerCapitaAvgs.push(perCapita.toFixed(1));
+
+        let savingText = '—';
+        if (idx > 0 && sizes[idx-1]) {
+          const prevCapita = sizeMap[sizes[idx-1]].totalLitres / sizeMap[sizes[idx-1]].occurrences / sizes[idx-1];
+          const diff = prevCapita - perCapita;
+          savingText = diff > 0 ? `وفر ${diff.toFixed(1)} لتر لكل فرد` : `زيادة ${Math.abs(diff).toFixed(1)} لتر`;
+        }
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><strong>أسرة من ${s} أفراد</strong></td>
+          <td>${occ} عائلة</td>
+          <td style="font-weight:bold; color:var(--primary);">${famAvg.toFixed(1)} لتر</td>
+          <td><span class="tag tag-blue">${perCapita.toFixed(1)} لتر / للفرد</span></td>
+          <td style="color:var(--success); font-size:0.85rem;">${savingText}</td>
+        `;
+        eBody.appendChild(row);
+      });
+
+      const ctx = document.getElementById('elasticityChart').getContext('2d');
+      if (elasticityChartInstance) elasticityChartInstance.destroy();
+
+      elasticityChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'متوسط استهلاك الأسرة الكلي (لتر)',
+              data: actualFamilyAvgs,
+              borderColor: '#38bdf8',
+              backgroundColor: 'rgba(56, 189, 248, 0.15)',
+              borderWidth: 3,
+              tension: 0.3,
+              yAxisID: 'y',
+              fill: true
+            },
+            {
+              label: 'نصيب الفرد الواحد حسب حجم الأسرة (لتر)',
+              data: actualPerCapitaAvgs,
+              borderColor: '#34d399',
+              borderWidth: 2,
+              borderDash: [5, 5],
+              tension: 0.3,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              type: 'linear',
+              position: 'left',
+              title: { display: true, text: 'استهلاك الأسرة (لتر)', color: '#8892b0' },
+              grid: { color: '#233554' },
+              ticks: { color: '#8892b0' }
+            },
+            y1: {
+              type: 'linear',
+              position: 'right',
+              title: { display: true, text: 'حصة الفرد (لتر)', color: '#8892b0' },
+              grid: { drawOnChartArea: false },
+              ticks: { color: '#8892b0' }
+            },
+            x: {
+              grid: { color: '#233554' },
+              ticks: { color: '#8892b0' }
+            }
+          },
+          plugins: {
+            legend: { labels: { color: '#f8fafc' } }
+          }
+        }
+      });
+    }
+
+    function getDistModeLabel(m) {
+      if (m === 'elasticity') return 'مرونة وفورات الحجم (α)';
+      if (m === 'per_capita') return 'بالتساوي لكل فرد';
+      return 'بالتساوي لكل عائلة';
+    }
+
+    function exportToCSV() {
+      if (!rawHistoryData || Object.keys(rawHistoryData).length === 0) {
+        alert('لا توجد بيانات لتصديرها');
+        return;
+      }
+
+      let csv = '\uFEFF';
+      csv += 'الدورة,تاريخ الإغلاق,اسم العائلة,عدد الأفراد,المستهلك (لتر),تفاصيل السحوبات بالأوعية\n';
+
+      Object.keys(rawHistoryData).forEach((key, idx) => {
+        const c = rawHistoryData[key];
+        const date = c.closedAtStr || '';
+        (c.families || []).forEach(f => {
+          const logsSummary = (f.logs || []).map(l => l.detail ? `[${l.detail}]` : l.amount).join(' | ');
+          csv += `دورة ${idx + 1},"${date}","${f.name}",${f.members},${f.consumed},"${logsSummary}"\n`;
+        });
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `احصائيات_استهلاك_المياه_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
