@@ -51,6 +51,11 @@
     .panel { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 24px; overflow-x: auto; }
     .panel h2 { font-size: 1.05rem; color: #fff; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
 
+    /* بطاقة نتائج معايرة ألفا */
+    .calibration-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; background: rgba(56, 189, 248, 0.05); border: 1px dashed var(--primary); border-radius: 10px; padding: 14px; margin-bottom: 18px; }
+    .calibration-item span { font-size: 0.78rem; color: var(--muted); display: block; }
+    .calibration-item strong { font-size: 1.25rem; color: #fff; }
+
     table { width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: right; min-width: 550px; }
     th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
     th { color: var(--muted); font-weight: 600; background: rgba(255,255,255,0.02); }
@@ -59,6 +64,7 @@
     .tag { display: inline-block; padding: 2px 7px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; }
     .tag-blue { background: rgba(56, 189, 248, 0.15); color: var(--primary); }
     .tag-green { background: rgba(52, 211, 153, 0.15); color: var(--success); }
+    .tag-amber { background: rgba(251, 191, 36, 0.15); color: var(--warning); }
 
     .chart-container { position: relative; width: 100%; height: 320px; }
     .loading-msg { text-align: center; padding: 30px; color: var(--muted); font-size: 1rem; }
@@ -81,7 +87,7 @@
     <div class="header">
       <div>
         <h1>📊 لوحة تحليلات استهلاك مياه المخيم</h1>
-        <p style="font-size:0.8rem; color:var(--muted); margin-top:2px;">تحليل الموارد واختبار فرضية مرونة وفورات الحجم (العلاقة غير الخطية)</p>
+        <p style="font-size:0.8rem; color:var(--muted); margin-top:2px;">معايرة المعامل الفعلي لمرونة وفورات الحجم (العلاقة اللاخطية)</p>
       </div>
       <div style="display:flex; gap:8px;">
         <button class="btn-action" onclick="fetchHistoryData()">🔄 تحديث</button>
@@ -113,12 +119,33 @@
         </div>
       </div>
 
-      <!-- اختبار وفورات الحجم والمرونة -->
+      <!-- اختبار وفورات الحجم والمعايرة التجريبية -->
       <div class="panel">
         <h2>
-          <span>اختبار وفر الحجم (متوسط استهلاك الفرد حسب حجم الأسرة)</span>
-          <span style="font-size:0.8rem; color:var(--muted); font-weight:normal;">المعامل النظري المعتمد: α = 0.58</span>
+          <span>اختبار وفورات الحجم ومعايرة معامل المرونة (&alpha;)</span>
+          <span style="font-size:0.8rem; color:var(--muted); font-weight:normal;">النموذج: استهلاك الأسرة = K &times; (الأفراد)&alpha;</span>
         </h2>
+
+        <!-- بطاقة المعايرة الإحصائية المستنتجة -->
+        <div class="calibration-box">
+          <div class="calibration-item">
+            <span>المعامل التجريبي الفعلي المستنتج (&alpha;)</span>
+            <strong id="empiricalAlpha" style="color:var(--primary);">—</strong>
+          </div>
+          <div class="calibration-item">
+            <span>دقة ارتباط النموذج الواقعي (R&sup2;)</span>
+            <strong id="rSquaredVal" style="color:var(--success);">—</strong>
+          </div>
+          <div class="calibration-item">
+            <span>المعامل النظري المقارن</span>
+            <strong style="color:var(--warning);">&alpha; = 0.58</strong>
+          </div>
+          <div class="calibration-item" style="grid-column: 1 / -1;">
+            <span>التشخيص الإحصائي لسلوك المخيم:</span>
+            <p id="alphaEvaluation" style="font-size:0.85rem; color:#fff; margin-top:3px;">—</p>
+          </div>
+        </div>
+
         <div class="chart-container" style="margin-bottom: 18px;">
           <canvas id="elasticityChart"></canvas>
         </div>
@@ -126,7 +153,7 @@
           <thead>
             <tr>
               <th>حجم الأسرة (الأفراد)</th>
-              <th>عدد الحالات المسجلة</th>
+              <th>عدد الحالات الفعالة</th>
               <th>متوسط سحب الأسرة بالدورة</th>
               <th>متوسط نصيب الفرد الواحد</th>
               <th>وفر الاستهلاك مقارنة بالفئات الأصغر</th>
@@ -143,10 +170,10 @@
           <thead>
             <tr>
               <th>تاريخ إغلاق الدورة</th>
-              <th>إجمالي السكان</th>
-              <th>المياه المتاحة</th>
+              <th>السكان</th>
+              <th>المتاح للتوزيع (الصافي)</th>
               <th>المستهلك فعلياً</th>
-              <th>نسبة الاستهلاك</th>
+              <th>نسبة السحب من المتاح</th>
               <th>طريقة التوزيع</th>
             </tr>
           </thead>
@@ -160,6 +187,7 @@
         <table>
           <thead>
             <tr>
+              <th>الخيمة</th>
               <th>اسم العائلة</th>
               <th>عدد الأفراد</th>
               <th>مجموع السحب التراكمي</th>
@@ -229,12 +257,16 @@
       const sizeMap = {};
       const familyMap = {};
       const cyclesList = [];
+      const regressionPairs = []; // لحساب ألفا التجريبي: { N, C }
 
       cycleKeys.forEach(key => {
         const cycle = data[key];
         const summary = cycle.summary || {};
         const cycleConsumed = summary.totalConsumed || 0;
         const cyclePop = summary.totalPop || 0;
+        const totalW = summary.totalWater || (cycle.settings && cycle.settings.totalWater) || 0;
+        const resW = summary.reserveLiters || (cycle.settings && cycle.settings.reserveLiters) || 0;
+        const netW = Math.max(0, totalW - resW);
 
         grandTotalConsumed += cycleConsumed;
         totalPopRecorded += cyclePop;
@@ -243,7 +275,9 @@
           date: cycle.closedAtStr || '—',
           timestamp: cycle.cycleTimestamp || 0,
           pop: cyclePop,
-          totalWater: summary.totalWater || 0,
+          totalWater: totalW,
+          reserveWater: resW,
+          netWater: netW,
           consumed: cycleConsumed,
           mode: (cycle.settings && cycle.settings.distMode) || 'elasticity'
         });
@@ -252,22 +286,27 @@
         fams.forEach(f => {
           const m = parseInt(f.members) || 0;
           const c = parseFloat(f.consumed) || 0;
+          const tent = f.tent || '—';
 
-          if (m > 0) {
+          // استبعاد الاستهلاك الصفري من دراسة المرونة
+          if (m > 0 && c > 0) {
             if (!sizeMap[m]) sizeMap[m] = { totalLitres: 0, occurrences: 0 };
             sizeMap[m].totalLitres += c;
             sizeMap[m].occurrences += 1;
+
+            regressionPairs.push({ n: m, c: c });
           }
 
           if (!familyMap[f.name]) {
-            familyMap[f.name] = { members: m, totalLitres: 0, appearances: 0 };
+            familyMap[f.name] = { tent: tent, members: m, totalLitres: 0, appearances: 0 };
           }
+          if (tent !== '—') familyMap[f.name].tent = tent;
           familyMap[f.name].totalLitres += c;
           familyMap[f.name].appearances += 1;
         });
       });
 
-      // المؤشرات
+      // المؤشرات الكلية
       document.getElementById('metricCycles').textContent = totalCycles;
       document.getElementById('metricTotalConsumed').textContent = Math.round(grandTotalConsumed) + ' لتر';
       document.getElementById('metricAvgCycle').textContent = Math.round(grandTotalConsumed / totalCycles) + ' لتر';
@@ -275,20 +314,23 @@
       const avgPerCapita = totalPopRecorded > 0 ? (grandTotalConsumed / (totalPopRecorded / totalCycles)) / totalCycles : 0;
       document.getElementById('metricPerCapita').textContent = avgPerCapita.toFixed(1) + ' لتر';
 
-      // تحليل المرونة والوفر
+      // حساب معامل المرونة الفعلي ومعايرة النموذج
+      calculateEmpiricalAlpha(regressionPairs);
+
+      // تحليل وفورات الحجم والرسم البياني
       renderElasticityAnalysis(sizeMap);
 
-      // جدول الدورات
+      // جدول الدورات بعد خصم الاحتياطي
       const cBody = document.getElementById('cyclesTableBody');
       cBody.innerHTML = '';
       cyclesList.sort((a,b) => b.timestamp - a.timestamp);
       cyclesList.forEach(c => {
-        const pct = c.totalWater > 0 ? ((c.consumed / c.totalWater) * 100).toFixed(1) : 0;
+        const pct = c.netWater > 0 ? ((c.consumed / c.netWater) * 100).toFixed(1) : 0;
         const row = document.createElement('tr');
         row.innerHTML = `
           <td><strong>${c.date}</strong></td>
           <td>${c.pop} فرد</td>
-          <td>${c.totalWater} لتر</td>
+          <td><strong>${c.netWater} لتر</strong> <small style="color:var(--muted); display:block; font-size:0.75rem;">(احتياطي: ${c.reserveWater})</small></td>
           <td style="color:var(--primary); font-weight:bold;">${c.consumed} لتر</td>
           <td><span class="tag tag-green">${pct}%</span></td>
           <td>${getDistModeLabel(c.mode)}</td>
@@ -296,7 +338,7 @@
         cBody.appendChild(row);
       });
 
-      // جدول العائلات
+      // جدول العائلات التراكمي
       const fBody = document.getElementById('familiesTableBody');
       fBody.innerHTML = '';
       Object.keys(familyMap).forEach(name => {
@@ -306,6 +348,7 @@
 
         const row = document.createElement('tr');
         row.innerHTML = `
+          <td><span class="tag tag-amber">${fam.tent}</span></td>
           <td><strong>${name}</strong></td>
           <td>${fam.members} أفراد</td>
           <td>${fam.totalLitres} لتر</td>
@@ -314,6 +357,59 @@
         `;
         fBody.appendChild(row);
       });
+    }
+
+    // حساب معامل ألفا الفعلي باستخدام الانحدار الخطي البسيط OLS: ln(C) = ln(K) + alpha * ln(N)
+    function calculateEmpiricalAlpha(pairs) {
+      if (pairs.length < 3) {
+        document.getElementById('empiricalAlpha').textContent = 'غير كافٍ';
+        document.getElementById('rSquaredVal').textContent = '—';
+        document.getElementById('alphaEvaluation').textContent = 'البيانات المؤرشفة قليلة جداً لحساب انحدار ذي دلالة إحصائية.';
+        return;
+      }
+
+      let sumX = 0, sumY = 0;
+      const lnData = pairs.map(p => {
+        const x = Math.log(p.n);
+        const y = Math.log(p.c);
+        sumX += x;
+        sumY += y;
+        return { x, y };
+      });
+
+      const n = lnData.length;
+      const meanX = sumX / n;
+      const meanY = sumY / n;
+
+      let ssXY = 0, ssXX = 0, ssYY = 0;
+      lnData.forEach(p => {
+        const dx = p.x - meanX;
+        const dy = p.y - meanY;
+        ssXY += dx * dy;
+        ssXX += dx * dx;
+        ssYY += dy * dy;
+      });
+
+      if (ssXX === 0) return;
+
+      const alpha = ssXY / ssXX;
+      const rSquared = ssYY > 0 ? Math.pow(ssXY, 2) / (ssXX * ssYY) : 0;
+
+      document.getElementById('empiricalAlpha').textContent = `α = ${alpha.toFixed(2)}`;
+      document.getElementById('rSquaredVal').textContent = `${(rSquared * 100).toFixed(1)}%`;
+
+      let diagText = '';
+      if (alpha < 0.3) {
+        diagText = `المعامل منخفض جداً (${alpha.toFixed(2)})؛ هذا يعكس أن الأسر تستهلك حصصاً شبه متقاربة بغض النظر عن حجمها (تأثير مباشر لنظام التوزيع بالتساوي لكل عائلة).`;
+      } else if (alpha >= 0.3 && alpha <= 0.7) {
+        diagText = `المعامل التجريبي (${alpha.toFixed(2)}) متقارب جداً مع الفرضية النظرية (0.58)؛ يثبت وجود وفر ملحوظ في الحجم ناتج عن الطبخ والاحتياجات المنزلية المشتركة.`;
+      } else if (alpha > 0.7 && alpha <= 1.05) {
+        diagText = `المعامل مرتفع (${alpha.toFixed(2)})؛ الاستهلاك شبه خطي ومقارب للتوزيع بالتساوي لكل فرد (الاحتياجات الفردية هي الحاكمة).`;
+      } else {
+        diagText = `المعامل أكبر من 1 (${alpha.toFixed(2)})؛ هناك سلوك استثنائي للأسر الكبيرة يسحب كميات أعلى من المتوقع.`;
+      }
+
+      document.getElementById('alphaEvaluation').textContent = diagText;
     }
 
     function renderElasticityAnalysis(sizeMap) {
@@ -345,7 +441,7 @@
         const row = document.createElement('tr');
         row.innerHTML = `
           <td><strong>أسرة من ${s} أفراد</strong></td>
-          <td>${occ} عائلة</td>
+          <td>${occ} عائلة (سحوبات نشطة)</td>
           <td style="font-weight:bold; color:var(--primary);">${famAvg.toFixed(1)} لتر</td>
           <td><span class="tag tag-blue">${perCapita.toFixed(1)} لتر / للفرد</span></td>
           <td style="color:var(--success); font-size:0.85rem;">${savingText}</td>
@@ -362,7 +458,7 @@
           labels: labels,
           datasets: [
             {
-              label: 'متوسط استهلاك الأسرة الكلي (لتر)',
+              label: 'متوسط استهلاك الأسرة الفعلي (لتر)',
               data: actualFamilyAvgs,
               borderColor: '#38bdf8',
               backgroundColor: 'rgba(56, 189, 248, 0.15)',
@@ -372,7 +468,7 @@
               fill: true
             },
             {
-              label: 'نصيب الفرد الواحد حسب حجم الأسرة (لتر)',
+              label: 'نصيب الفرد الفعلي حسب حجم الأسرة (لتر)',
               data: actualPerCapitaAvgs,
               borderColor: '#34d399',
               borderWidth: 2,
@@ -425,14 +521,15 @@
       }
 
       let csv = '\uFEFF';
-      csv += 'الدورة,تاريخ الإغلاق,اسم العائلة,عدد الأفراد,المستهلك (لتر),تفاصيل السحوبات بالأوعية\n';
+      csv += 'الدورة,تاريخ الإغلاق,رقم الخيمة,اسم العائلة,عدد الأفراد,المستهلك (لتر),تفاصيل السحوبات بالأوعية\n';
 
       Object.keys(rawHistoryData).forEach((key, idx) => {
         const c = rawHistoryData[key];
         const date = c.closedAtStr || '';
         (c.families || []).forEach(f => {
+          const tent = f.tent || '—';
           const logsSummary = (f.logs || []).map(l => l.detail ? `[${l.detail}]` : l.amount).join(' | ');
-          csv += `دورة ${idx + 1},"${date}","${f.name}",${f.members},${f.consumed},"${logsSummary}"\n`;
+          csv += `دورة ${idx + 1},"${date}","${tent}","${f.name}",${f.members},${f.consumed},"${logsSummary}"\n`;
         });
       });
 
