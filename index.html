@@ -413,7 +413,7 @@
     input[type="range"] { width: 100%; accent-color: var(--primary-strong); height: 8px; cursor: pointer; }
 
     /* الجداول والفرز التفاعلي */
-    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: right; min-width: 720px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: right; min-width: 820px; }
     th, td { padding: 12px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
     th {
       color: var(--text-secondary);
@@ -424,7 +424,7 @@
     }
     th.sortable { cursor: pointer; transition: color 0.15s; }
     th.sortable:hover { color: var(--primary); }
-    .sort-indicator { display: inline-block; margin-right: 4px; font-size: 0.75rem; color: var(--primary); }
+    .sort-indicator { display: inline-block; margin-right: 4px; font-size: 0.75rem; color: var(--primary); font-weight: 800; }
 
     tr.clickable-row { cursor: pointer; transition: background 0.15s; }
     tr.clickable-row:hover { background: var(--surface-hover); }
@@ -768,13 +768,13 @@
         </div>
       </div>
 
-      <!-- التبويب 3: أداء العائلات وحصة الفرد التفصيلية -->
+      <!-- التبويب 3: أداء العائلات وحصة الفرد التفصيلية (مع عمود للفرد تراكمياً القابل للفرز) -->
       <div id="tab-families" class="tab-section">
         <div class="panel">
           <div class="panel-header">
             <div>
               <h2>3. الأداء التراكمي وحصة الفرد الفعلية لكل عائلة</h2>
-              <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">💡 اضغط على عنوان أي عمود للترتيب، أو اضغط على صف أي عائلة لفتح سجل سحوبات الأوعية التفصيلي.</p>
+              <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">💡 اضغط على عنوان أي عمود (مثل: للفرد تراكمياً، حصة الفرد بالدورة، أو الخيمة) للترتيب الفوري، واضغط على أي عائلة لفتح تفاصيل سحوباتها بالأوعية.</p>
             </div>
           </div>
 
@@ -785,9 +785,10 @@
                 <th class="sortable" onclick="sortFamiliesBy('name')">اسم العائلة <span id="sort-name" class="sort-indicator"></span></th>
                 <th class="sortable" onclick="sortFamiliesBy('members')">الأفراد <span id="sort-members" class="sort-indicator"></span></th>
                 <th class="sortable" onclick="sortFamiliesBy('activeCycles')">دورات الحضور <span id="sort-activeCycles" class="sort-indicator"></span></th>
-                <th class="sortable" onclick="sortFamiliesBy('totalLitres')">إجمالي السحب الكلي <span id="sort-totalLitres" class="sort-indicator"></span></th>
+                <th class="sortable" onclick="sortFamiliesBy('totalLitres')">إجمالي سحب الأسرة <span id="sort-totalLitres" class="sort-indicator"></span></th>
+                <th class="sortable" onclick="sortFamiliesBy('perCapitaCumulative')">للفرد تراكمياً <span id="sort-perCapitaCumulative" class="sort-indicator"></span></th>
                 <th class="sortable" onclick="sortFamiliesBy('activeAvg')">متوسط سحب الأسرة بالدورة <span id="sort-activeAvg" class="sort-indicator"></span></th>
-                <th class="sortable" onclick="sortFamiliesBy('perCapitaActive')">حصة الفرد الفعلية (لتر/فرد) <span id="sort-perCapitaActive" class="sort-indicator"></span></th>
+                <th class="sortable" onclick="sortFamiliesBy('perCapitaActive')">حصة الفرد بالدورة النشطة <span id="sort-perCapitaActive" class="sort-indicator"></span></th>
                 <th class="sortable" onclick="sortFamiliesBy('quotaUtil')">استنفاد الحصة <span id="sort-quotaUtil" class="sort-indicator"></span></th>
                 <th>نمط السحب والأوعية</th>
               </tr>
@@ -840,7 +841,6 @@
   </div>
 
   <script>
-    // البصمة المشفرة SHA-256 للرمز 399411
     const PIN_SHA256_HASH = "f8c367c6b9a43f91b42696b3859d7a368b1185966a35e30d897476d18a916327";
     const FIREBASE_HISTORY_URL = "https://camp-water-default-rtdb.europe-west1.firebasedatabase.app/camp_history.json";
     const CACHE_KEY = "camp_analytics_history_cache_v3";
@@ -1039,7 +1039,7 @@
       processAndRenderAnalytics(rawHistoryData);
     }
 
-    /* ==================== 5. المعالجة الإحصائية وحساب حصة الفرد ==================== */
+    /* ==================== 5. المعالجة الإحصائية وحساب الحصص ==================== */
     function computeCycleAllocatedShare(famMembers, allFams, netWater, settings) {
       if (netWater <= 0 || !allFams.length) return 0;
       const mode = (settings && settings.distMode) || 'per_family';
@@ -1293,7 +1293,7 @@
 
       let diagText = '';
       if (alpha < 0.35) {
-        diagText = `المعامل الفعلي منخفض (${alpha.toFixed(2)})؛ يعكس تأثير نظام التوزيع بالتساوي للعائلات ووجود عائلات كبيرة ذات سحب منخفض (جرب استثناء العائلات ذات السحب المنخفض جداً من الكبسولات أعلاه لمشاهدة معامل الطلب الطبيعي).`;
+        diagText = `المعامل الفعلي منخفض (${alpha.toFixed(2)})؛ يعكس تأثير نظام التوزيع بالتساوي للعائلات ووجود عائلات كبيرة ذات سحب منخفض.`;
       } else if (alpha >= 0.35 && alpha <= 0.72) {
         diagText = `المعامل الفعلي (${alpha.toFixed(2)}) يقع ضمن النطاق المثالي لوفورات الحجم ويتقارب مع الفرضية المرجعية (0.58)؛ يثبت وفر المشاركة المنزلية كلما كبرت الأسرة.`;
       } else {
@@ -1483,7 +1483,6 @@
 
     /* ==================== 8. جدول أداء العائلات وحصة الفرد والفرز التفاعلي ==================== */
     function getHeatTintStyle(perCapitaVal) {
-      // تدرج حراري هادئ لتمييز كثافة استهلاك الفرد بدون أشرطة تقدم
       const min = 15, max = 95;
       const ratio = Math.max(0, Math.min(1, (perCapitaVal - min) / (max - min)));
       const alpha = (0.08 + ratio * 0.22).toFixed(2);
@@ -1498,6 +1497,7 @@
         familySortState.asc = !familySortState.asc;
       } else {
         familySortState.field = field;
+        // الترتيب تصاعدي للخيمة والاسم، وتنازلي لبقية الأرقام (الأعلى أولاً)
         familySortState.asc = (field === 'tent' || field === 'name');
       }
       renderFamiliesTable();
@@ -1509,8 +1509,8 @@
       const fBody = document.getElementById('familiesTableBody');
       fBody.innerHTML = '';
 
-      // تحديث أسهم الترتيب
-      ['tent', 'name', 'members', 'activeCycles', 'totalLitres', 'activeAvg', 'perCapitaActive', 'quotaUtil'].forEach(k => {
+      // تحديث أسهم الترتيب لكافة الأعمدة
+      ['tent', 'name', 'members', 'activeCycles', 'totalLitres', 'perCapitaCumulative', 'activeAvg', 'perCapitaActive', 'quotaUtil'].forEach(k => {
         const el = document.getElementById(`sort-${k}`);
         if (el) el.textContent = familySortState.field === k ? (familySortState.asc ? '▲' : '▼') : '';
       });
@@ -1568,9 +1568,11 @@
           <td><strong>${fam.name}</strong></td>
           <td><span class="num">${fam.members}</span> أفراد</td>
           <td><span class="num">${fam.activeCyclesCount}</span> من <span class="num">${fam.totalCyclesCount}</span></td>
+          <td><strong class="num">${fam.totalLitres}</strong> لتر</td>
           <td>
-            <strong class="num">${fam.totalLitres}</strong> لتر
-            <span class="sub-metric">للفرد تراكمياً: <span class="num">${fam.perCapitaCumulative.toFixed(1)}</span> لتر</span>
+            <span class="tag tag-blue" style="font-size:0.84rem;">
+              <strong class="num">${fam.perCapitaCumulative.toFixed(1)}</strong> لتر/فرد
+            </span>
           </td>
           <td><strong class="num" style="color:var(--primary); font-size:0.95rem;">${fam.activeAvg.toFixed(1)}</strong> لتر/دورة</td>
           <td>
@@ -1630,8 +1632,9 @@
       document.getElementById('modalFamilyTitle').textContent = `⛺ خيمة ${fam.tent}: عائلة ${fam.name} (${fam.members} أفراد)`;
       const activeAvg = fam.activeCyclesCount > 0 ? (fam.totalLitres / fam.activeCyclesCount) : 0;
       const perCapita = fam.members > 0 ? (activeAvg / fam.members) : 0;
+      const perCapitaCum = fam.members > 0 ? (fam.totalLitres / fam.members) : 0;
       document.getElementById('modalFamilySub').textContent =
-        `إجمالي السحب: ${fam.totalLitres} لتر | متوسط الدورة: ${activeAvg.toFixed(1)} لتر | حصة الفرد الفعلية: ${perCapita.toFixed(1)} لتر/دورة`;
+        `إجمالي السحب: ${fam.totalLitres} لتر | للفرد تراكمياً: ${perCapitaCum.toFixed(1)} لتر | متوسط الدورة: ${activeAvg.toFixed(1)} لتر | حصة الفرد بالدورة: ${perCapita.toFixed(1)} لتر/دورة`;
 
       const body = document.getElementById('modalLogsBody');
       body.innerHTML = '';
