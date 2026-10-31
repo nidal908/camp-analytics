@@ -36,6 +36,9 @@
     .ai-box { background: var(--primary-light); border: 1px solid var(--primary); padding: 12px; border-radius: 8px; margin-bottom: 15px; }
     .alert-box { background: var(--warning-light); border: 1px solid var(--warning); color: var(--warning); padding: 10px; border-radius: 6px; margin-top: 10px; margin-bottom: 12px; font-size: 0.9rem; display: none; }
     .repeat-box { background: var(--danger-light); border: 1px solid var(--danger); color: var(--danger); padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 0.9rem; display: none; }
+    .loading-box { background: #e0f2fe; border: 1px dashed #0284c7; color: #0369a1; padding: 10px; border-radius: 6px; margin-top: 10px; font-weight: bold; font-size: 0.9rem; display: none; align-items: center; gap: 8px; }
+    .preview-box { display: none; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; margin-top: 10px; }
+    .preview-box img { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; }
     table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
     th, td { border: 1px solid var(--border); padding: 9px; text-align: right; }
     th { background: #f1f5f9; }
@@ -77,15 +80,41 @@
   <!-- 1. نموذج الصرف -->
   <div id="dispense" class="panel active">
     <div class="ai-box no-print">
-      <label>مساعد قراءة الوصفات الطبية (كاميرا الذكاء الاصطناعي أو الصوت أو الحروف المتقطعة مثل "امو..500"):</label>
+      <label>إدخال الوصفة الطبية (صورة من الذاكرة أو ملف PDF أو تصوير فوري أو صوت):</label>
       <div class="toolbar" style="margin-top:6px;">
-        <input type="text" id="smartSearch" style="flex:1; min-width:200px;" placeholder="اكتب الحروف المقروءة مثل: امو..500 أو انطق الاسم..." oninput="handleSmartSearch()">
+        <input type="text" id="smartSearch" style="flex:2; min-width:180px;" placeholder="اكتب حروفاً مثل: امو..500 أو انطق الصنف..." oninput="handleSmartSearch()">
         <button type="button" class="action-btn" onclick="startVoiceInput()">🎤 نطق</button>
+        
+        <!-- زر الكاميرا المباشرة -->
         <label class="secondary-btn" style="margin:0; cursor:pointer;">
-          📷 تصوير وصفة بالـ AI
-          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="analyzePrescriptionImage(event)">
+          📷 تصوير فوري
+          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="onPrescriptionSelected(event)">
+        </label>
+
+        <!-- زر رفع ملف مخزن في الذاكرة (صور أو PDF) -->
+        <label class="secondary-btn" style="margin:0; cursor:pointer; background:#0284c7;">
+          📁 رفع ملف / صورة
+          <input type="file" accept="image/*,application/pdf" style="display:none" onchange="onPrescriptionSelected(event)">
         </label>
       </div>
+
+      <!-- معاينة المستند المختار -->
+      <div id="filePreviewBox" class="preview-box">
+        <img id="previewImg" style="display:none;" alt="معاينة">
+        <span id="previewPdfIcon" style="display:none; font-size:1.8rem;">📄</span>
+        <div style="flex:1;">
+          <div id="previewFileName" style="font-weight:bold; font-size:0.85rem;"></div>
+          <div id="previewFileSize" style="font-size:0.75rem; color:#64748b;"></div>
+        </div>
+        <button class="secondary-btn" style="padding:4px 8px; font-size:0.75rem;" onclick="clearPrescriptionPreview()">إلغاء</button>
+      </div>
+
+      <!-- مؤشر التحميل -->
+      <div id="aiLoadingIndicator" class="loading-box">
+        <span>⏳</span>
+        <span>جاري تحليل الوصفة الطبية بالذكاء الاصطناعي ومطابقتها مع مخزون الصيدلية...</span>
+      </div>
+
       <div id="searchSuggestions" style="margin-top:8px; font-size:0.85rem;"></div>
     </div>
 
@@ -135,11 +164,17 @@
   <!-- 2. نموذج الاستلام -->
   <div id="receive" class="panel">
     <div class="ai-box no-print" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-      <span><strong>إدخال الفواتير بالذكاء الاصطناعي:</strong> صور فاتورة المورد أو علبة الدواء لاستخراج البيانات وتاريخ الصلاحية فوراً.</span>
-      <label class="secondary-btn" style="margin:0; cursor:pointer;">
-        📷 تصوير فاتورة مورد بالـ AI
-        <input type="file" accept="image/*" capture="environment" style="display:none" onchange="analyzeInvoiceImage(event)">
-      </label>
+      <span><strong>إدخال الفواتير بالذكاء الاصطناعي:</strong> ارفع صورة أو ملف PDF لفاتورة المورد لاستخراج الأصناف والتواريخ فوراً.</span>
+      <div class="toolbar">
+        <label class="secondary-btn" style="margin:0; cursor:pointer;">
+          📷 تصوير بالكاميرا
+          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="analyzeInvoiceImage(event)">
+        </label>
+        <label class="secondary-btn" style="margin:0; cursor:pointer; background:#0284c7;">
+          📁 رفع ملف فاتورة / PDF
+          <input type="file" accept="image/*,application/pdf" style="display:none" onchange="analyzeInvoiceImage(event)">
+        </label>
+      </div>
     </div>
 
     <div class="grid no-print">
@@ -289,7 +324,7 @@
     <h3>إعدادات الذكاء الاصطناعي (Gemini Vision API) والنسخ الاحتياطي</h3>
     <div class="grid">
       <div>
-        <label>مفتاح Gemini API (مجاني من Google AI Studio لقراءة الصور)</label>
+        <label>مفتاح Gemini API (مجاني من Google AI Studio لقراءة الصور والـ PDF)</label>
         <input type="password" id="apiKeyInput" placeholder="ألصق مفتاح AIzaSy... هنا" onchange="saveApiKey()">
       </div>
       <div>
@@ -305,7 +340,6 @@
 </div>
 
 <script>
-// دوال التبديل بين التبويبات في بداية الكود لتعمل فوراً دون تأثر
 function switchTab(tabId, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -314,7 +348,6 @@ function switchTab(tabId, btn) {
   if (btn) btn.classList.add('active');
 }
 
-// نظام تخزين ذكي يتجاوز قيود أمان الهاتف عند فتح الملف عبر رابط content://
 const memoryStore = {};
 const safeStorage = {
   getItem: function(key) {
@@ -447,10 +480,11 @@ function startVoiceInput() {
   rec.start();
 }
 
+// دالة مشتركة لاستدعاء Gemini Vision للصور وملفات الـ PDF
 async function callGeminiVision(file, promptText) {
   const apiKey = safeStorage.getItem('GeminiAPIKey');
   if (!apiKey) {
-    alert('لتشغيل قراءة الكاميرا الفعلية، ضع مفتاح Gemini API المجاني في تبويب (5. دليل الأصناف والـ AI). سيتم الآن تشغيل محاكاة ذكية للتجربة.');
+    alert('لتشغيل قراءة الكاميرا والملفات الفعلية، ضع مفتاح Gemini API المجاني في تبويب (5. دليل الأصناف والـ AI). سيتم الآن تشغيل محاكاة ذكية للتجربة.');
     return null;
   }
   const base64 = await new Promise((resolve) => {
@@ -459,6 +493,8 @@ async function callGeminiVision(file, promptText) {
     reader.readAsDataURL(file);
   });
 
+  const mimeType = file.type || (file.name.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
+
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -466,7 +502,7 @@ async function callGeminiVision(file, promptText) {
       contents: [{
         parts: [
           { text: promptText },
-          { inlineData: { mimeType: file.type, data: base64 } }
+          { inlineData: { mimeType: mimeType, data: base64 } }
         ]
       }]
     })
@@ -475,46 +511,84 @@ async function callGeminiVision(file, promptText) {
   return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
-async function analyzePrescriptionImage(event) {
+// معالجة اختيار ملف الوصفة من الذاكرة أو الكاميرا مع المعاينة ومؤشر التحميل
+async function onPrescriptionSelected(event) {
   const file = event.target.files[0];
   if (!file) return;
-  const inventoryNames = db.items.map(i => `${i.id}: ${i.name} (${i.active})`).join(' | ');
-  const prompt = `أنت مساعد صيدلي ذكي. اقرأ هذه الوصفة الطبية المكتوبة بخط اليد وطابقها مع أقرب 3 أصناف من مخزون الصيدلية التالي فقط: [${inventoryNames}]. أرجع النتيجة بصيغة JSON فقط يحتوي على مصفوفة matches بها id الصنف ونسبة الثقة.`;
 
-  const res = await callGeminiVision(file, prompt);
-  if (!res) {
-    document.getElementById('searchSuggestions').innerHTML =
-      `🤖 <strong>تحليل الذكاء الاصطناعي للخط اليدوي (أعلى 3 احتمالات من مخزونك):</strong> ` +
-      db.items.slice(0, 3).map(m => `<button class="secondary-btn" style="margin:2px;" onclick="selectItem('${m.id}')">${m.name}</button>`).join(' ');
-    return;
+  // عرض المعاينة
+  const previewBox = document.getElementById('filePreviewBox');
+  const previewImg = document.getElementById('previewImg');
+  const previewPdfIcon = document.getElementById('previewPdfIcon');
+  const previewFileName = document.getElementById('previewFileName');
+  const previewFileSize = document.getElementById('previewFileSize');
+  const loadingEl = document.getElementById('aiLoadingIndicator');
+
+  previewBox.style.display = 'flex';
+  previewFileName.innerText = file.name;
+  previewFileSize.innerText = (file.size / 1024).toFixed(1) + ' KB';
+
+  if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+    previewImg.style.display = 'none';
+    previewPdfIcon.style.display = 'block';
+  } else {
+    previewPdfIcon.style.display = 'none';
+    previewImg.style.display = 'block';
+    previewImg.src = URL.createObjectURL(file);
   }
+
+  // إظهار مؤشر التحميل
+  loadingEl.style.display = 'flex';
+
+  const inventoryNames = db.items.map(i => `${i.id}: ${i.name} (${i.active})`).join(' | ');
+  const prompt = `أنت مساعد صيدلي ذكي. اقرأ هذه الوصفة الطبية (صورة أو ملف PDF) وطابقها مع أقرب 3 أصناف من مخزون الصيدلية التالي فقط: [${inventoryNames}]. أرجع النتيجة حصراً بصيغة JSON يحتوي على مصفوفة matches بها id الصنف ونسبة الثقة.`;
+
   try {
+    const res = await callGeminiVision(file, prompt);
+    loadingEl.style.display = 'none';
+
+    if (!res) {
+      document.getElementById('searchSuggestions').innerHTML =
+        `🤖 <strong>تحليل الذكاء الاصطناعي للملف (أعلى 3 احتمالات من مخزونك):</strong> ` +
+        db.items.slice(0, 3).map(m => `<button class="secondary-btn" style="margin:2px;" onclick="selectItem('${m.id}')">${m.name}</button>`).join(' ');
+      return;
+    }
+
     const cleanJson = res.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(cleanJson);
-    if (parsed.matches) {
+    if (parsed.matches && parsed.matches.length > 0) {
       document.getElementById('searchSuggestions').innerHTML =
-        `🤖 <strong>نتائج قراءة الوصفة بالذكاء الاصطناعي:</strong> ` +
+        `🤖 <strong>الأدوية المقروءة من الوصفة:</strong> ` +
         parsed.matches.map(m => {
           const item = db.items.find(i => i.id === String(m.id));
           return item ? `<button class="secondary-btn" style="margin:2px;" onclick="selectItem('${item.id}')">${item.name}</button>` : '';
         }).join(' ');
+    } else {
+      document.getElementById('searchSuggestions').innerHTML = '<span style="color:var(--warning)">تمت قراءة الملف لكن لم يتم العثور على صنف مطابق في المخزون بدقة.</span>';
     }
   } catch (e) {
-    document.getElementById('smartSearch').value = res;
-    handleSmartSearch();
+    loadingEl.style.display = 'none';
+    document.getElementById('searchSuggestions').innerHTML = '<span style="color:var(--danger)">حدث خطأ أثناء معالجة الملف عبر الذكاء الاصطناعي.</span>';
   }
+}
+
+function clearPrescriptionPreview() {
+  document.getElementById('filePreviewBox').style.display = 'none';
+  document.getElementById('searchSuggestions').innerHTML = '';
+  document.getElementById('aiLoadingIndicator').style.display = 'none';
 }
 
 async function analyzeInvoiceImage(event) {
   const file = event.target.files[0];
   if (!file) return;
-  const prompt = `استخرج بيانات فاتورة الأدوية أو علبة الدواء من الصورة بصيغة JSON فقط بالحقول التالية: {"qty": number, "batch": "string", "expiry": "YYYY-MM-DD", "supplier": "string"}`;
+  const prompt = `استخرج بيانات فاتورة الأدوية أو علبة الدواء من الصورة أو مستند PDF بصيغة JSON فقط بالحقول التالية: {"qty": number, "batch": "string", "expiry": "YYYY-MM-DD", "supplier": "string"}`;
+  
   const res = await callGeminiVision(file, prompt);
   if (!res) {
     document.getElementById('recQty').value = 100;
     document.getElementById('recBatch').value = 'AI-BATCH-90';
     document.getElementById('recExpiry').value = '2027-12-31';
-    document.getElementById('recSupplier').value = 'توريد آلي عبر الكاميرا';
+    document.getElementById('recSupplier').value = 'توريد آلي عبر الملف';
     return;
   }
   try {
@@ -524,7 +598,7 @@ async function analyzeInvoiceImage(event) {
     if (parsed.expiry) document.getElementById('recExpiry').value = parsed.expiry;
     if (parsed.supplier) document.getElementById('recSupplier').value = parsed.supplier;
   } catch (e) {
-    alert('تمت قراءة النص: ' + res);
+    alert('تمت قراءة الفاتورة بنجاح: ' + res);
   }
 }
 
@@ -749,7 +823,7 @@ function renderAll() {
   const destBatchEl = document.getElementById('destBatch');
   if (destBatchEl) {
     destBatchEl.innerHTML = activeBatches.map(b => {
-      const item = db.items.find(i => i.id === b.itemId);
+      const item = db.items.find(i => i.id === batchIdToString(b));
       const isExp = b.expiry <= todayStr ? ' [منتهية الصلاحية]' : '';
       return `<option value="${b.batchId}">${item ? item.name : ''} - تشغيلة ${b.batchNo} (متبقي: ${b.remaining} | انتهاء: ${b.expiry})${isExp}</option>`;
     }).join('');
@@ -772,7 +846,10 @@ function renderAll() {
   checkItemAvailability();
 }
 
-// تهيئة أولية آمنة
+function batchIdToString(b) {
+  return b.itemId;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const dispDateEl = document.getElementById('dispDate');
   const recDateEl = document.getElementById('recDate');
