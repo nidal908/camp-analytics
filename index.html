@@ -52,7 +52,8 @@
     .info-btn { background: var(--secondary); color: #fff; }
     .success-btn { background: var(--success); color: #fff; }
     .danger-btn { background: var(--danger); color: #fff; }
-    .sm-btn { padding: 5px 10px; font-size: 0.8rem; }
+    .warning-btn { background: var(--warning); color: #fff; }
+    .sm-btn { padding: 5px 10px; font-size: 0.78rem; }
 
     .ai-box { background: var(--primary-light); border: 1px solid var(--primary); padding: 14px; border-radius: 8px; margin-bottom: 16px; }
     .staging-box { background: var(--secondary-light); border: 2px solid var(--secondary); padding: 14px; border-radius: 8px; margin: 15px 0; display: none; }
@@ -69,6 +70,7 @@
     th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: right; vertical-align: middle; }
     th { background: #f1f5f9; font-weight: bold; }
     tr.dup-row { background: var(--warning-light) !important; }
+    .empty-row { text-align: center; color: var(--muted); padding: 20px !important; font-style: italic; }
 
     .badge { padding: 3px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: bold; display: inline-block; margin: 2px; }
     .badge-ok { background: var(--success-light); color: var(--success); }
@@ -81,9 +83,14 @@
     .item-card { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
     .print-only { display: none; }
 
+    /* نافذة التعديل المنبثقة (Modal) */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.6); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
+    .modal-card { background: #fff; border-radius: 10px; max-width: 520px; width: 100%; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-card h3 { margin-top: 0; color: var(--primary); }
+
     @media print {
       body { background: #fff; padding: 0; }
-      header, .tabs, .no-print, .storage-warn { display: none !important; }
+      header, .tabs, .no-print, .storage-warn, .modal-overlay { display: none !important; }
       .panel { border: none; padding: 0; box-shadow: none; }
       .print-only { display: block !important; margin-top: 25px; }
       .sig-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; margin-top: 45px; font-weight: bold; }
@@ -94,7 +101,7 @@
 
 <div class="container">
   <div id="storageWarning" class="storage-warn">
-    <span>⚠️ <strong>تنبيه:</strong> أنت تفتح الملف عبر مسار محلي مؤقت (`content://`). لحفظ البيانات تلقائياً وبشكل دائم، ارفعه على GitHub Pages أو اضغط "حفظ نسخة احتياطية" قبل الخروج.</span>
+    <span>⚠️ <strong>تنبيه:</strong> أنت تفتح الملف عبر مسار محلي مؤقت (`content://`). لحفظ البيانات تلقائياً وبشكل دائم، ارفعه على GitHub Pages أو اضغط "نسخة احتياطية" قبل الخروج.</span>
     <button class="secondary-btn sm-btn" onclick="downloadBackup()">💾 حفظ نسخة الآن</button>
   </div>
 
@@ -122,7 +129,7 @@
     <div class="ai-box no-print">
       <label>مساعد الوصفات الذكي (يقرأ الأدوية والمستلزمات والأدوات المساعدة، يعبئ بيانات المستفيد، ويتجاهل المشطوب):</label>
       <div class="toolbar" style="margin-top:6px;">
-        <input type="text" id="smartSearch" style="flex:2; min-width:190px;" placeholder="بحث بالحروف المتقطعة (مثل: امو..875 أو عكاز) أو انطق الصنف..." oninput="handleSmartSearch()">
+        <input type="text" id="smartSearch" style="flex:2; min-width:190px;" placeholder="بحث بالحروف المتقطعة (مثل: امو..500) أو انطق الصنف..." oninput="handleSmartSearch()">
         <button type="button" class="action-btn" onclick="startVoiceInput()">🎤 نطق</button>
         
         <label class="btn-label secondary-btn">
@@ -158,16 +165,16 @@
     <div class="grid no-print">
       <div>
         <label>اسم المستفيد</label>
-        <input type="text" id="dispBeneficiary" list="beneficiariesList" placeholder="مثال: فلاح مرعي" oninput="checkBeneficiaryHistory()">
+        <input type="text" id="dispBeneficiary" list="beneficiariesList" placeholder="الاسم الثلاثي أو الرباعي للمستفيد" oninput="checkBeneficiaryHistory()">
         <datalist id="beneficiariesList"></datalist>
       </div>
       <div>
         <label>رقم الهوية / الملف</label>
-        <input type="text" id="dispBenId" placeholder="مثال: 922870951" oninput="checkBeneficiaryHistory()">
+        <input type="text" id="dispBenId" placeholder="رقم الهوية لفحص تكرار الصرف" oninput="checkBeneficiaryHistory()">
       </div>
       <div>
         <label>سنة الميلاد / العمر</label>
-        <input type="text" id="dispBirthYear" placeholder="مثال: 1961">
+        <input type="text" id="dispBirthYear" placeholder="سنة الميلاد أو العمر">
       </div>
       <div>
         <label>تاريخ الاستفادة</label>
@@ -235,6 +242,7 @@
             <th>الكمية</th>
             <th>التشغيلة المخصومة</th>
             <th>انتهاء الصلاحية</th>
+            <th class="no-print">إلغاء واسترجاع</th>
           </tr>
         </thead>
         <tbody id="dispenseTableBody"></tbody>
@@ -304,11 +312,11 @@
       </div>
       <div>
         <label>الكمية المستلمة</label>
-        <input type="number" id="recQty" min="1" value="100">
+        <input type="number" id="recQty" min="1" value="1">
       </div>
       <div>
         <label>رقم التشغيلة (Batch / Lot)</label>
-        <input type="text" id="recBatch" placeholder="مثال: LC79299 أو VV78">
+        <input type="text" id="recBatch" placeholder="رقم التشغيلة المطبوع">
       </div>
       <div>
         <label style="display:flex; justify-content:space-between;">
@@ -325,7 +333,7 @@
       </div>
       <div>
         <label>الجهة الموردة / رقم الكشف</label>
-        <input type="text" id="recSupplier" placeholder="مثال: IEHK 2024 / مستودع">
+        <input type="text" id="recSupplier" placeholder="اسم الجهة الموردة أو المستودع">
       </div>
     </div>
     <button class="action-btn no-print" onclick="submitSingleReceive()">➕ حفظ الاستلام المفرد للمخزون</button>
@@ -339,10 +347,11 @@
             <th>الصنف</th>
             <th>التصنيف</th>
             <th>الكمية الأولية</th>
-            <th>المتبقي</th>
+            <th>المتبقي الحالي</th>
             <th>رقم التشغيلة</th>
             <th>تاريخ الانتهاء</th>
             <th>الجهة الموردة</th>
+            <th class="no-print">تعديل / حذف</th>
           </tr>
         </thead>
         <tbody id="receiveTableBody"></tbody>
@@ -378,6 +387,7 @@
             <th>الجرد الفعلي (الرف)</th>
             <th>المطابقة</th>
             <th>تحليل الصلاحية وخطر التلف (AI Burn-Rate)</th>
+            <th class="no-print">إدارة الصنف</th>
           </tr>
         </thead>
         <tbody id="inventoryTableBody"></tbody>
@@ -432,6 +442,7 @@
             <th>تاريخ انتهائها</th>
             <th>الكمية المتلفة</th>
             <th>السبب واللجنة</th>
+            <th class="no-print">إلغاء واسترجاع</th>
           </tr>
         </thead>
         <tbody id="destroyTableBody"></tbody>
@@ -467,7 +478,7 @@
     <div class="grid">
       <div>
         <label>اسم الصنف والتركيز / المقاس</label>
-        <input type="text" id="newItemName" placeholder="مثال: أوجمنتين 875 أو عكاز مرفق أو شاش معقم">
+        <input type="text" id="newItemName" placeholder="اسم الدواء أو المستلزم أو الأداة المساعدة">
       </div>
       <div>
         <label>التصنيف</label>
@@ -490,7 +501,7 @@
       </div>
       <div>
         <label>المادة الفعالة أو المواصفة الفنية (للبدائل)</label>
-        <input type="text" id="newItemActive" placeholder="مثال: Amoxicillin 875mg أو مقاس كبار">
+        <input type="text" id="newItemActive" placeholder="المادة الفعالة والتركيز أو المواصفة">
       </div>
       <div>
         <label>متوسط الاستهلاك اليومي التقديري</label>
@@ -499,9 +510,26 @@
     </div>
     <button class="action-btn" onclick="addNewItem()">➕ حفظ الصنف في الدليل</button>
 
+    <h3 style="margin-top:25px;">قائمة الأصناف المسجلة في الدليل (تعديل أو حذف)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>اسم الصنف</th>
+            <th>التصنيف</th>
+            <th>الوحدة</th>
+            <th>المادة الفعالة / المواصفة</th>
+            <th>معدل الاستهلاك اليومي</th>
+            <th>إجراءات (تعديل / حذف)</th>
+          </tr>
+        </thead>
+        <tbody id="catalogTableBody"></tbody>
+      </table>
+    </div>
+
     <hr style="margin:24px 0; border-color:var(--border);">
 
-    <h3>إعدادات الذكاء الاصطناعي (Google Gemini API) والنسخ الاحتياطي</h3>
+    <h3>إعدادات الذكاء الاصطناعي (Google Gemini API) وإدارة البيانات</h3>
     <div class="grid">
       <div style="grid-column: span 2;">
         <label>مفتاح Gemini API (مجاني من aistudio.google.com لقراءة الصور وملفات PDF)</label>
@@ -514,7 +542,19 @@
     </div>
     <div class="toolbar" style="margin-top:10px;">
       <button class="action-btn" onclick="saveApiKey()">🔑 حفظ مفتاح الـ API</button>
-      <button class="secondary-btn" onclick="resetDemoData()">🔄 إعادة ضبط البيانات التجريبية</button>
+      <button class="danger-btn" onclick="clearAllSystemData()">🗑️ مسح وتصفير جميع بيانات النظام بالكامل</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== نافذة التعديل المنبثقة (Modal) ==================== -->
+<div id="editModal" class="modal-overlay">
+  <div class="modal-card">
+    <h3 id="modalTitle">تعديل البيانات</h3>
+    <div id="modalFields"></div>
+    <div class="toolbar" style="margin-top:15px; justify-content:flex-end;">
+      <button class="action-btn" id="modalSaveBtn">💾 حفظ التعديلات</button>
+      <button class="secondary-btn" onclick="closeEditModal()">إلغاء</button>
     </div>
   </div>
 </div>
@@ -554,59 +594,30 @@ const safeStorage = {
 const todayStr = new Date().toISOString().split('T')[0];
 const NO_EXPIRY_DATE = '2099-12-31';
 
-// بيانات افتراضية واقعية تشمل الأدوية والمستلزمات الطبية والأدوات المساعدة
-const defaultData = {
-  items: [
-    { id: '1', name: 'جلوكوفاج 850 ملغ (Glucophage)', category: 'دواء', unit: 'قرص/كبسولة', active: 'Metformin 850mg', dailyRate: 15 },
-    { id: '2', name: 'أماريل 2 ملغ (Amaryl 2mg)', category: 'دواء', unit: 'قرص/كبسولة', active: 'Glimepiride 2mg', dailyRate: 8 },
-    { id: '3', name: 'أوجمنتين 875 ملغ (Augmentin 875)', category: 'دواء', unit: 'قرص/كبسولة', active: 'Amoxicillin + Clavulanic Acid 875mg', dailyRate: 10 },
-    { id: '4', name: 'أوميبرازول 20 ملغ (Omeprazole 20mg)', category: 'دواء', unit: 'قرص/كبسولة', active: 'Omeprazole 20mg', dailyRate: 12 },
-    { id: '5', name: 'باراسيتامول 500 ملغ (Paracetamol 500mg)', category: 'دواء', unit: 'قرص/كبسولة', active: 'Paracetamol 500mg', dailyRate: 25 },
-    { id: '6', name: 'باراسيتامول 100 ملغ أطفال (Paracetamol 100mg)', category: 'دواء', unit: 'قرص/كبسولة', active: 'Paracetamol 100mg disp.', dailyRate: 10 },
-    { id: '7', name: 'أملاح إرواء فموي (ORS Sachets 20.5g)', category: 'دواء', unit: 'كيس/ظرف', active: 'Oral Rehydration Salts', dailyRate: 6 },
-    { id: '8', name: 'أقراص زنك 20 ملغ (Zinc Sulfate 20mg)', category: 'دواء', unit: 'قرص/كبسولة', active: 'Zinc Sulfate 20mg', dailyRate: 8 },
-    { id: '9', name: 'أكياس بلاستيكية لتوزيع الأدوية (6x8 cm)', category: 'مستلزمات طبية', unit: 'كيس/ظرف', active: 'Plastic Dispensing Bag 6x8cm', dailyRate: 30 },
-    { id: '10', name: 'شاش طبي معقم وحقيبة إسعاف', category: 'مستلزمات طبية', unit: 'قطعة/وحدة', active: 'Sterile Gauze & Dressing', dailyRate: 5 },
-    { id: '11', name: 'عكاز طبي ألمنيوم قابل للتعديل', category: 'أدوات مساعدة', unit: 'جهاز/أداة', active: 'Adjustable Aluminum Crutch', dailyRate: 0.5 },
-    { id: '12', name: 'جهاز فحص سكر الدم مع الشرائط (Glucometer)', category: 'أدوات مساعدة', unit: 'جهاز/أداة', active: 'Blood Glucose Monitor', dailyRate: 0.5 }
-  ],
-  batches: [
-    { batchId: 'B1', itemId: '1', batchNo: 'GLC-88', initial: 500, remaining: 320, expiry: '2027-09-30', supplier: 'مستودع الأدوية المركزي', recDate: '2026-09-10' },
-    { batchId: 'B2', itemId: '2', batchNo: 'AMR-12', initial: 300, remaining: 180, expiry: '2027-06-15', supplier: 'مستودع الأدوية المركزي', recDate: '2026-09-10' },
-    { batchId: 'B3', itemId: '3', batchNo: 'AUG-04', initial: 200, remaining: 14, expiry: '2026-12-15', supplier: 'مستودع الشفاء', recDate: '2026-08-01' },
-    { batchId: 'B4', itemId: '3', batchNo: 'AUG-99', initial: 300, remaining: 300, expiry: '2028-03-01', supplier: 'مستودع الشفاء', recDate: '2026-10-15' },
-    { batchId: 'B5', itemId: '4', batchNo: 'LC79299', initial: 504, remaining: 504, expiry: '2026-11-30', supplier: 'IEHK 2024 Kit', recDate: '2026-10-20' },
-    { batchId: 'B6', itemId: '5', batchNo: '200680512', initial: 1000, remaining: 940, expiry: '2029-04-30', supplier: 'IEHK 2024 Kit', recDate: '2026-10-20' },
-    { batchId: 'B7', itemId: '6', batchNo: '241016', initial: 1000, remaining: 1000, expiry: '2027-08-31', supplier: 'IEHK 2024 Kit', recDate: '2026-10-20' },
-    { batchId: 'B8', itemId: '7', batchNo: '240263', initial: 200, remaining: 200, expiry: '2027-08-31', supplier: 'IEHK 2024 Kit', recDate: '2026-10-20' },
-    { batchId: 'B9', itemId: '8', batchNo: 'V04', initial: 1000, remaining: 1000, expiry: '2027-06-30', supplier: 'IEHK 2024 Kit', recDate: '2026-10-20' },
-    { batchId: 'B10', itemId: '9', batchNo: 'VV78', initial: 1000, remaining: 980, expiry: NO_EXPIRY_DATE, supplier: 'IEHK 2024 Kit', recDate: '2026-10-20' },
-    { batchId: 'B11', itemId: '10', batchNo: 'GZ-102', initial: 150, remaining: 20, expiry: '2026-10-01', supplier: 'مستودع المستلزمات', recDate: '2025-11-01' },
-    { batchId: 'B12', itemId: '11', batchNo: 'CR-01', initial: 25, remaining: 18, expiry: NO_EXPIRY_DATE, supplier: 'قسم التأهيل والأدوات المساعدة', recDate: '2026-09-01' },
-    { batchId: 'B13', itemId: '12', batchNo: 'GL-55', initial: 15, remaining: 12, expiry: NO_EXPIRY_DATE, supplier: 'قسم التأهيل والأدوات المساعدة', recDate: '2026-09-01' }
-  ],
-  dispensings: [
-    { date: '2026-10-07', beneficiary: 'فلاح مرعي', benId: '922870951', birthYear: '1961', itemId: '1', itemName: 'جلوكوفاج 850 ملغ (Glucophage)', category: 'دواء', qty: 30, batchNo: 'GLC-88', expiry: '2027-09-30' },
-    { date: '2026-10-07', beneficiary: 'فلاح مرعي', benId: '922870951', birthYear: '1961', itemId: '2', itemName: 'أماريل 2 ملغ (Amaryl 2mg)', category: 'دواء', qty: 30, batchNo: 'AMR-12', expiry: '2027-06-15' }
-  ],
+// قاعدة بيانات فارغة ونظيفة 100% بدون أي بيانات تجريبية
+const cleanEmptyData = {
+  items: [],
+  batches: [],
+  dispensings: [],
   destructions: [],
   processedFileHashes: []
 };
 
 let db;
 try {
-  const saved = safeStorage.getItem('SmartPharmFinalDB');
-  db = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultData));
+  // استخدام مفتاح جديد لضمان فتح صفحة نظيفة تماماً وعدم تحميل البيانات التجريبية القديمة
+  const saved = safeStorage.getItem('PharmacyCleanProdDB_v1');
+  db = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(cleanEmptyData));
   if (!db.processedFileHashes) db.processedFileHashes = [];
 } catch (e) {
-  db = JSON.parse(JSON.stringify(defaultData));
+  db = JSON.parse(JSON.stringify(cleanEmptyData));
 }
 
 let dispenseCart = [];
 let stagingInvoiceRows = [];
 
 function saveDB() {
-  safeStorage.setItem('SmartPharmFinalDB', JSON.stringify(db));
+  safeStorage.setItem('PharmacyCleanProdDB_v1', JSON.stringify(db));
   renderAll();
 }
 
@@ -616,13 +627,208 @@ function saveApiKey() {
   alert('تم حفظ مفتاح الذكاء الاصطناعي بنجاح.');
 }
 
-function resetDemoData() {
-  if (confirm('هل أنت متأكد من إعادة ضبط البيانات التجريبية؟')) {
-    db = JSON.parse(JSON.stringify(defaultData));
+function clearAllSystemData() {
+  if (confirm('تحذير: هل أنت متأكد من مسح وتصفير جميع الأصناف والتشغيلات وسجلات الصرف بالكامل؟')) {
+    db = JSON.parse(JSON.stringify(cleanEmptyData));
     dispenseCart = [];
     stagingInvoiceRows = [];
     saveDB();
+    alert('تم تصفير النظام بالكامل وأصبح جاهزاً على صفحة نظيفة.');
   }
+}
+
+// ==================== نافذة التعديل (للأصناف والتشغيلات) ====================
+function closeEditModal() {
+  document.getElementById('editModal').style.display = 'none';
+}
+
+function openEditItemModal(itemId) {
+  const item = db.items.find(i => i.id === itemId);
+  if (!item) return;
+
+  document.getElementById('modalTitle').innerText = '✏️ تعديل بيانات الصنف';
+  document.getElementById('modalFields').innerHTML = `
+    <div style="margin-bottom:10px;">
+      <label>اسم الصنف والتركيز / المقاس</label>
+      <input type="text" id="editItemName" value="${item.name}">
+    </div>
+    <div style="margin-bottom:10px;">
+      <label>التصنيف</label>
+      <select id="editItemCat">
+        <option value="دواء" ${item.category==='دواء'?'selected':''}>دواء</option>
+        <option value="مستلزمات طبية" ${item.category==='مستلزمات طبية'?'selected':''}>مستلزمات طبية</option>
+        <option value="أدوات مساعدة" ${item.category==='أدوات مساعدة'?'selected':''}>أدوات مساعدة</option>
+      </select>
+    </div>
+    <div style="margin-bottom:10px;">
+      <label>الوحدة الأساسية</label>
+      <select id="editItemUnit">
+        <option value="قرص/كبسولة" ${item.unit==='قرص/كبسولة'?'selected':''}>قرص / كبسولة</option>
+        <option value="علبة" ${item.unit==='علبة'?'selected':''}>علبة</option>
+        <option value="شريط" ${item.unit==='شريط'?'selected':''}>شريط</option>
+        <option value="كيس/ظرف" ${item.unit==='كيس/ظرف'?'selected':''}>كيس / ظرف</option>
+        <option value="قطعة/وحدة" ${item.unit==='قطعة/وحدة'?'selected':''}>قطعة / وحدة</option>
+        <option value="جهاز/أداة" ${item.unit==='جهاز/أداة'?'selected':''}>جهاز / أداة</option>
+      </select>
+    </div>
+    <div style="margin-bottom:10px;">
+      <label>المادة الفعالة أو المواصفة</label>
+      <input type="text" id="editItemActive" value="${item.active}">
+    </div>
+    <div style="margin-bottom:10px;">
+      <label>معدل الاستهلاك اليومي</label>
+      <input type="number" id="editItemRate" value="${item.dailyRate}" min="0.1" step="0.5">
+    </div>
+  `;
+
+  document.getElementById('modalSaveBtn').onclick = () => {
+    const newName = document.getElementById('editItemName').value.trim();
+    if (!newName) { alert('اسم الصنف مطلوب.'); return; }
+    item.name = newName;
+    item.category = document.getElementById('editItemCat').value;
+    item.unit = document.getElementById('editItemUnit').value;
+    item.active = document.getElementById('editItemActive').value.trim() || newName;
+    item.dailyRate = Number(document.getElementById('editItemRate').value) || 1;
+    // تحديث اسم الصنف في سجلات الصرف المرتبطة به
+    db.dispensings.forEach(d => {
+      if (d.itemId === item.id) {
+        d.itemName = item.name;
+        d.category = item.category;
+      }
+    });
+    saveDB();
+    closeEditModal();
+  };
+
+  document.getElementById('editModal').style.display = 'flex';
+}
+
+function deleteItem(itemId) {
+  const item = db.items.find(i => i.id === itemId);
+  if (!item) return;
+  const relatedBatches = db.batches.filter(b => b.itemId === itemId);
+  const msg = relatedBatches.length > 0
+    ? `هل أنت متأكد من حذف الصنف (${item.name})؟ سيتم أيضاً حذف (${relatedBatches.length}) تشغيلة مرتبطة به من المخزون.`
+    : `هل أنت متأكد من حذف الصنف (${item.name}) من الدليل؟`;
+
+  if (confirm(msg)) {
+    db.items = db.items.filter(i => i.id !== itemId);
+    db.batches = db.batches.filter(b => b.itemId !== itemId);
+    dispenseCart = dispenseCart.filter(c => c.itemId !== itemId);
+    renderDispenseCart();
+    saveDB();
+  }
+}
+
+function openEditBatchModal(batchId) {
+  const b = db.batches.find(x => x.batchId === batchId);
+  if (!b) return;
+  const isNoExp = b.expiry === NO_EXPIRY_DATE;
+
+  document.getElementById('modalTitle').innerText = '✏️ تعديل بيانات التشغيلة المستلمة';
+  document.getElementById('modalFields').innerHTML = `
+    <div style="margin-bottom:10px;">
+      <label>رقم التشغيلة (Batch No)</label>
+      <input type="text" id="editBatchNo" value="${b.batchNo}">
+    </div>
+    <div style="margin-bottom:10px;">
+      <label>الكمية الأولية المستلمة</label>
+      <input type="number" id="editBatchInitial" value="${b.initial}" min="1">
+    </div>
+    <div style="margin-bottom:10px;">
+      <label>الكمية المتبقية حالياً</label>
+      <input type="number" id="editBatchRem" value="${b.remaining}" min="0">
+    </div>
+    <div style="margin-bottom:10px;">
+      <label style="display:flex; justify-content:space-between;">
+        <span>تاريخ انتهاء الصلاحية</span>
+        <span><input type="checkbox" id="editBatchNoExp" style="width:auto;" ${isNoExp?'checked':''} onchange="document.getElementById('editBatchExp').disabled=this.checked"> بدون صلاحية</span>
+      </label>
+      <input type="date" id="editBatchExp" value="${isNoExp ? '' : b.expiry}" ${isNoExp ? 'disabled' : ''}>
+    </div>
+    <div style="margin-bottom:10px;">
+      <label>الجهة الموردة</label>
+      <input type="text" id="editBatchSupplier" value="${b.supplier}">
+    </div>
+  `;
+
+  document.getElementById('modalSaveBtn').onclick = () => {
+    const noExp = document.getElementById('editBatchNoExp').checked;
+    const expVal = noExp ? NO_EXPIRY_DATE : document.getElementById('editBatchExp').value;
+    if (!expVal) { alert('يرجى تحديد تاريخ الصلاحية أو اختيار بدون صلاحية.'); return; }
+
+    b.batchNo = document.getElementById('editBatchNo').value.trim() || b.batchNo;
+    b.initial = Number(document.getElementById('editBatchInitial').value) || 0;
+    b.remaining = Number(document.getElementById('editBatchRem').value) || 0;
+    b.expiry = expVal;
+    b.supplier = document.getElementById('editBatchSupplier').value.trim() || 'مورد عام';
+    saveDB();
+    closeEditModal();
+  };
+
+  document.getElementById('editModal').style.display = 'flex';
+}
+
+function deleteBatch(batchId) {
+  const b = db.batches.find(x => x.batchId === batchId);
+  if (!b) return;
+  if (confirm(`هل أنت متأكد من حذف التشغيلة (${b.batchNo}) نهائياً من سجل الاستلام والمخزون؟`)) {
+    db.batches = db.batches.filter(x => x.batchId !== batchId);
+    saveDB();
+  }
+}
+
+// ==================== إلغاء عملية الصرف وإرجاع الكمية للمخزون ====================
+function cancelDispenseRecord(index) {
+  const rec = db.dispensings[index];
+  if (!rec) return;
+
+  if (!confirm(`هل تريد إلغاء عملية صرف (${rec.qty}) من صنف (${rec.itemName}) للمستفيد (${rec.beneficiary}) وإرجاع الكمية إلى المخزون؟`)) {
+    return;
+  }
+
+  // البحث عن التشغيلة الأصلية لإعادة الرصيد إليها
+  let targetBatch = db.batches.find(b => b.batchId === rec.batchId) ||
+                    db.batches.find(b => b.itemId === rec.itemId && b.batchNo === rec.batchNo);
+
+  if (targetBatch) {
+    targetBatch.remaining += Number(rec.qty);
+  } else if (rec.itemId) {
+    // إذا كانت التشغيلة قد حُذفت، نعيد إنشاءها بالكمية المسترجعة
+    db.batches.unshift({
+      batchId: rec.batchId || ('B-' + Date.now()),
+      itemId: rec.itemId,
+      batchNo: rec.batchNo || 'RESTORED',
+      initial: Number(rec.qty),
+      remaining: Number(rec.qty),
+      expiry: rec.expiry === 'بدون صلاحية' ? NO_EXPIRY_DATE : rec.expiry,
+      supplier: 'مسترجع من إلغاء صرف',
+      recDate: todayStr
+    });
+  }
+
+  db.dispensings.splice(index, 1);
+  saveDB();
+  alert(`تم إلغاء عملية الصرف وإرجاع (${rec.qty}) إلى رصيد التشغيلة (${rec.batchNo}) بنجاح.`);
+}
+
+// ==================== إلغاء محضر إتلاف وإرجاع الكمية للمخزون ====================
+function cancelDestructionRecord(index) {
+  const rec = db.destructions[index];
+  if (!rec) return;
+
+  if (!confirm(`هل تريد إلغاء محضر إتلاف (${rec.qty}) من (${rec.itemName}) وإرجاع الكمية للتشغيلة (${rec.batchNo})؟`)) {
+    return;
+  }
+
+  const targetBatch = db.batches.find(b => b.batchId === rec.batchId) ||
+                      db.batches.find(b => b.batchNo === rec.batchNo);
+  if (targetBatch) {
+    targetBatch.remaining += Number(rec.qty);
+  }
+
+  db.destructions.splice(index, 1);
+  saveDB();
 }
 
 // ==================== حساب البصمة الرقمية للملفات (SHA-256 Anti-Duplication) ====================
@@ -641,7 +847,6 @@ async function computeFileSHA256(file) {
 function applyDoseCalculation() {
   const factor = Number(document.getElementById('doseCalc').value);
   if (factor > 0) {
-    // افتراض دورة علاجية أو شهرية (10 أيام للمضادات أو 30 يوماً للمزمن)
     document.getElementById('dispQty').value = factor * 10;
     checkItemAvailability();
   }
@@ -702,7 +907,7 @@ function handleSmartSearch() {
       `<button class="secondary-btn sm-btn" style="margin:2px;" onclick="selectItem('${m.id}')">${m.name} [${m.category}]</button>`
     ).join(' ');
   } else {
-    sugBox.innerHTML = '<span style="color:var(--danger)">لا يوجد صنف مطابق في الدليل.</span>';
+    sugBox.innerHTML = '<span style="color:var(--danger)">لا يوجد صنف مطابق في الدليل حالياً.</span>';
   }
 }
 
@@ -729,7 +934,10 @@ function checkItemAvailability() {
   const reqQty = Number(document.getElementById('dispQty').value) || 0;
   const alertBox = document.getElementById('dispAlert');
   const item = db.items.find(i => i.id === itemId);
-  if (!item) return;
+  if (!item) {
+    alertBox.style.display = 'none';
+    return;
+  }
 
   const validBatches = db.batches
     .filter(b => b.itemId === itemId && b.remaining > 0 && b.expiry > todayStr)
@@ -755,6 +963,7 @@ function checkItemAvailability() {
 
 function addToDispenseCart() {
   const itemId = document.getElementById('dispItem').value;
+  if (!itemId) { alert('يرجى تعريف أو اختيار صنف أولاً.'); return; }
   const qty = Number(document.getElementById('dispQty').value) || 1;
   addToDispenseCartDirect(itemId, qty);
 }
@@ -770,7 +979,7 @@ function addToDispenseCartDirect(itemId, qty) {
   const totalNeeded = (existingInCart ? existingInCart.qty : 0) + Number(qty);
 
   if (avail < totalNeeded) {
-    alert(`الرصيد الصالح المتاح من (${item.name}) هو ${avail} فقط، لا يكفي لإضافة ${totalNeeded}.`);
+    alert(`الرصيد الصالح المتاح من (${item.name}) هو ${avail} فقط، لا يكفي لإضافة ${totalNeeded}. قم باستلام رصيد له أولاً في تبويب الاستلام.`);
     return;
   }
 
@@ -808,7 +1017,6 @@ function renderDispenseCart() {
 
 function submitFullDispense() {
   if (dispenseCart.length === 0) {
-    // إذا كانت السلة فارغة، نصرف الصنف المحدد حالياً مباشرة
     addToDispenseCart();
     if (dispenseCart.length === 0) return;
   }
@@ -830,6 +1038,7 @@ function submitFullDispense() {
       b.remaining -= taken;
       qtyToTake -= taken;
       db.dispensings.unshift({
+        dispenseId: 'DSP-' + Date.now() + '-' + Math.floor(Math.random()*1000),
         date,
         beneficiary,
         benId,
@@ -838,6 +1047,7 @@ function submitFullDispense() {
         itemName: cartItem.name,
         category: cartItem.category,
         qty: taken,
+        batchId: b.batchId,
         batchNo: b.batchNo,
         expiry: b.expiry === NO_EXPIRY_DATE ? 'بدون صلاحية' : b.expiry
       });
@@ -850,11 +1060,11 @@ function submitFullDispense() {
   alert(`تم اعتماد صرف الأصناف للمستفيد (${beneficiary}) بنجاح.`);
 }
 
-// ==================== استدعاء Gemini Vision API المشترك ====================
+// ==================== استدعاء Gemini Vision API الفعلي ====================
 async function callGeminiVision(file, promptText) {
   const apiKey = safeStorage.getItem('GeminiAPIKey');
   if (!apiKey) {
-    alert('لتفعيل القراءة الحقيقية بالذكاء الاصطناعي، أدخل مفتاح Gemini API المجاني في تبويب (5. الدليل وإعدادات الـ AI). سيتم الآن عرض محاكاة واقعية للتجربة.');
+    alert('يرجى إدخال مفتاح Gemini API المجاني في التبويب الخامس (5. الدليل وإعدادات الـ AI) لتشغيل قراءة الصور وملفات الـ PDF.');
     return null;
   }
   const base64 = await new Promise((resolve) => {
@@ -878,6 +1088,9 @@ async function callGeminiVision(file, promptText) {
     })
   });
   const data = await response.json();
+  if (data.error) {
+    throw new Error(data.error.message || 'خطأ في مفتاح الـ API');
+  }
   return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
@@ -936,26 +1149,10 @@ async function onPrescriptionSelected(event) {
   try {
     const res = await callGeminiVision(file, prompt);
     loadingEl.style.display = 'none';
+    if (!res) { event.target.value = ''; return; }
 
-    let parsed;
-    if (!res) {
-      // محاكاة واقعية مطابقة لصورة وصفة المستفيد (فلاح مرعي) مع تجاهل السطر المشطوب
-      parsed = {
-        patient_name: 'فلاح مرعي',
-        patient_id: '922870951',
-        birth_year: '1961',
-        rx_date: '2024-10-07',
-        items: [
-          { read_name: 'Glucophage (3x1)', category: 'دواء', active_or_spec: 'Metformin 850mg', suggested_qty: 30, matched_item_id: '1', alternative_item_id: null },
-          { read_name: 'Amaryl (1x1)', category: 'دواء', active_or_spec: 'Glimepiride 2mg', suggested_qty: 30, matched_item_id: '2', alternative_item_id: null },
-          { read_name: 'Augmentin 875 (2x1)', category: 'دواء', active_or_spec: 'Amoxicillin + Clavulanic Acid 875mg', suggested_qty: 14, matched_item_id: '3', alternative_item_id: null }
-        ]
-      };
-    } else {
-      parsed = JSON.parse(res.replace(/```json|```/g, '').trim());
-    }
+    const parsed = JSON.parse(res.replace(/```json|```/g, '').trim());
 
-    // تعبئة بيانات المستفيد تلقائياً
     if (parsed.patient_name) document.getElementById('dispBeneficiary').value = parsed.patient_name;
     if (parsed.patient_id) document.getElementById('dispBenId').value = parsed.patient_id;
     if (parsed.birth_year) document.getElementById('dispBirthYear').value = parsed.birth_year;
@@ -965,7 +1162,7 @@ async function onPrescriptionSelected(event) {
     checkBeneficiaryHistory();
 
     if (parsed.items && parsed.items.length > 0) {
-      let html = '<h4 style="margin:8px 0;">🤖 الأصناف المقروءة من الوصفة (تم استبعاد أي أسطر مشطوبة):</h4>';
+      let html = '<h4 style="margin:8px 0;">🤖 الأصناف المستخرجة من الوصفة:</h4>';
       parsed.items.forEach(m => {
         const item = db.items.find(i => i.id === String(m.matched_item_id));
         const altItem = db.items.find(i => i.id === String(m.alternative_item_id));
@@ -1007,10 +1204,14 @@ async function onPrescriptionSelected(event) {
         }
       });
       sugBox.innerHTML = html;
+    } else {
+      sugBox.innerHTML = '<span style="color:var(--warning)">لم يتم التعرف على أصناف واضحة في المستند.</span>';
     }
+    event.target.value = '';
   } catch (e) {
     loadingEl.style.display = 'none';
-    sugBox.innerHTML = '<span style="color:var(--danger)">تعذر تحليل الملف. تأكد من وضوح الصورة وصحة مفتاح الـ API.</span>';
+    sugBox.innerHTML = `<span style="color:var(--danger)">تعذر تحليل الملف: ${e.message}</span>`;
+    event.target.value = '';
   }
 }
 
@@ -1020,7 +1221,7 @@ function quickRegisterItem(name, category, active, qty) {
   db.items.push({ id: newId, name, category, unit, active: active || name, dailyRate: 2 });
   saveDB();
   selectItem(newId, qty);
-  alert(`تم تعريف الصنف (${name}) ضمن فئة [${category}] بنجاح. يمكنك الآن استلام رصيد له أو صرفه.`);
+  alert(`تم تعريف الصنف (${name}) ضمن فئة [${category}] بنجاح. يمكنك الآن استلام رصيد له في تبويب الاستلام.`);
 }
 
 function clearRxPreview() {
@@ -1037,7 +1238,6 @@ async function analyzeInvoiceFile(event) {
   const loadingEl = document.getElementById('invLoading');
   loadingEl.style.display = 'flex';
 
-  // 1. فحص البصمة الرقمية للصورة/الملف (SHA-256) لمنع رفع نفس الصفحة مرتين
   const fileHash = await computeFileSHA256(file);
   const isDuplicateFile = db.processedFileHashes.includes(fileHash);
 
@@ -1046,7 +1246,7 @@ async function analyzeInvoiceFile(event) {
 إذا كان الصنف لا يحمل تاريخ صلاحية (مثل أكياس أو علب بلاستيكية أو أدوات)، اجعل حقل expiry قيمته "NO_EXPIRY".
 أرجع النتيجة بصيغة JSON خالص فقط:
 {
-  "supplier_or_kit": "اسم المورد أو رقم الكشف مثل IEHK 2024",
+  "supplier_or_kit": "اسم المورد أو رقم الكشف",
   "rows_count": 6,
   "items": [
     {
@@ -1064,29 +1264,12 @@ async function analyzeInvoiceFile(event) {
   try {
     const res = await callGeminiVision(file, prompt);
     loadingEl.style.display = 'none';
+    if (!res) { event.target.value = ''; return; }
 
-    let parsed;
-    if (!res) {
-      // محاكاة واقعية مطابقة لكشف توريد (IEHK 2024) شاملة الأدوية والمستلزمات
-      parsed = {
-        supplier_or_kit: 'IEHK 2024 Basic Unit #337363/1',
-        rows_count: 6,
-        items: [
-          { code: 'DORAOMEP2CG', name: 'أوميبرازول 20 ملغ (Omeprazole 20mg)', category: 'دواء', unit: 'قرص/كبسولة', qty: 504, batch: 'LC79299', expiry: '2026-11-30' },
-          { code: 'DORAORSA2S-', name: 'أملاح إرواء فموي (ORS Sachets 20.5g)', category: 'دواء', unit: 'كيس/ظرف', qty: 200, batch: '240263', expiry: '2027-08-31' },
-          { code: 'DORAPARA1TD1', name: 'باراسيتامول 100 ملغ أطفال (Paracetamol 100mg)', category: 'دواء', unit: 'قرص/كبسولة', qty: 1000, batch: '241016', expiry: '2027-08-31' },
-          { code: 'DORAPARA5T-', name: 'باراسيتامول 500 ملغ (Paracetamol 500mg)', category: 'دواء', unit: 'قرص/كبسولة', qty: 1000, batch: '200680512', expiry: '2029-04-30' },
-          { code: 'PHYPSOAPB1BL', name: 'حافظة صابون بلاستيكية + صابون طبي', category: 'مستلزمات طبية', unit: 'قطعة/وحدة', qty: 10, batch: 'SOP-24', expiry: 'NO_EXPIRY' },
-          { code: 'SDDCBAGP06P1', name: 'أكياس بلاستيكية لتوزيع الأدوية (6x8 cm)', category: 'مستلزمات طبية', unit: 'كيس/ظرف', qty: 1000, batch: 'VV78', expiry: 'NO_EXPIRY' }
-        ]
-      };
-    } else {
-      parsed = JSON.parse(res.replace(/```json|```/g, '').trim());
-    }
+    const parsed = JSON.parse(res.replace(/```json|```/g, '').trim());
 
     stagingInvoiceRows = (parsed.items || []).map(row => {
       const cleanBatch = (row.batch || 'BAT-NEW').trim();
-      // فحص هل التشغيلة مسجلة مسبقاً في المخزون (Composite Key Check)
       const isBatchDup = db.batches.some(b => b.batchNo.toLowerCase() === cleanBatch.toLowerCase());
       return {
         name: row.name,
@@ -1095,7 +1278,7 @@ async function analyzeInvoiceFile(event) {
         qty: Number(row.qty) || 1,
         batch: cleanBatch,
         expiry: (!row.expiry || row.expiry === 'NO_EXPIRY') ? NO_EXPIRY_DATE : row.expiry,
-        supplier: parsed.supplier_or_kit || 'توريد عبر الكاميرا',
+        supplier: parsed.supplier_or_kit || 'توريد آلي',
         isDuplicate: isBatchDup,
         fileHash
       };
@@ -1105,7 +1288,8 @@ async function analyzeInvoiceFile(event) {
     event.target.value = '';
   } catch (e) {
     loadingEl.style.display = 'none';
-    alert('حدث خطأ أثناء قراءة جدول الفاتورة.');
+    alert('حدث خطأ أثناء قراءة جدول الفاتورة: ' + e.message);
+    event.target.value = '';
   }
 }
 
@@ -1122,11 +1306,11 @@ function renderStagingTable(isDuplicateFile = false) {
 
   let warnMsgs = [];
   if (isDuplicateFile) {
-    warnMsgs.push('⚠️ <strong>تنبيه بصمة الملف (SHA-256):</strong> هذه الصورة/الوثيقة تم رفعها مسبقاً! تم تظليل التشغيلات المكررة لمنع مضاعفة الرصيد.');
+    warnMsgs.push('⚠️ <strong>تنبيه بصمة الملف (SHA-256):</strong> هذه الوثيقة تم رفعها مسبقاً! تم تظليل التشغيلات المكررة لمنع مضاعفة الرصيد.');
   }
   const dupCount = stagingInvoiceRows.filter(r => r.isDuplicate).length;
   if (dupCount > 0) {
-    warnMsgs.push(`⚠️ يوجد (${dupCount}) سطر بتشغيلة مسجلة مسبقاً في المخزون (مظللة بالأصفر). عند الاعتماد سيتم تحديثها دون تكرار وهمي.`);
+    warnMsgs.push(`⚠️ يوجد (${dupCount}) سطر بتشغيلة مسجلة مسبقاً في المخزون (مظللة بالأصفر). عند الاعتماد سيتم تخطي المكرر لحماية الرصيد.`);
   }
   alertEl.innerHTML = warnMsgs.join('<br>');
 
@@ -1144,7 +1328,7 @@ function renderStagingTable(isDuplicateFile = false) {
       <td><input type="number" value="${r.qty}" style="width:80px;" onchange="stagingInvoiceRows[${idx}].qty=Number(this.value)"></td>
       <td><input type="text" value="${r.batch}" style="width:100px;" onchange="stagingInvoiceRows[${idx}].batch=this.value"></td>
       <td>${r.expiry === NO_EXPIRY_DATE ? '<span class="badge badge-info">بدون صلاحية</span>' : `<input type="date" value="${r.expiry}" onchange="stagingInvoiceRows[${idx}].expiry=this.value">`}</td>
-      <td>${r.isDuplicate ? '<span class="badge badge-warn">تشغيلة موجودة مسبقاً</span>' : '<span class="badge badge-ok">جديد</span>'}</td>
+      <td>${r.isDuplicate ? '<span class="badge badge-warn">مكرر</span>' : '<span class="badge badge-ok">جديد</span>'}</td>
       <td><button class="danger-btn sm-btn" onclick="removeStagingRow(${idx})">حذف</button></td>
     </tr>
   `).join('');
@@ -1166,7 +1350,6 @@ function approveStagingInvoice() {
   let skippedDups = 0;
 
   stagingInvoiceRows.forEach(row => {
-    // البحث عن الصنف في الدليل أو إنشاؤه تلقائياً إن لم يكن موجوداً
     let item = db.items.find(i => i.name.toLowerCase() === row.name.toLowerCase());
     if (!item) {
       item = {
@@ -1180,7 +1363,6 @@ function approveStagingInvoice() {
       db.items.push(item);
     }
 
-    // منع التكرار عبر المفتاح المركب (نفس الصنف + نفس رقم التشغيلة)
     const existingBatch = db.batches.find(b => b.itemId === item.id && b.batchNo.toLowerCase() === row.batch.toLowerCase());
     if (existingBatch) {
       skippedDups++;
@@ -1206,7 +1388,7 @@ function approveStagingInvoice() {
   stagingInvoiceRows = [];
   document.getElementById('invoiceStagingBox').style.display = 'none';
   saveDB();
-  alert(`تم اعتماد الكشف: أُضيفت (${addedBatches}) تشغيلة جديدة، وتم تخطي (${skippedDups}) تشغيلة مكررة لحماية الرصيد.`);
+  alert(`تم اعتماد الكشف: أُضيفت (${addedBatches}) تشغيلة جديدة، وتم تخطي (${skippedDups}) تشغيلة مكررة.`);
 }
 
 function toggleRecExpiry() {
@@ -1227,6 +1409,7 @@ function onRecItemChange() {
 
 function submitSingleReceive() {
   const itemId = document.getElementById('recItem').value;
+  if (!itemId) { alert('يرجى تعريف صنف أولاً في التبويب الخامس أو رفع فاتورة بالذكاء الاصطناعي.'); return; }
   const qty = Number(document.getElementById('recQty').value);
   const batchNo = document.getElementById('recBatch').value.trim() || ('BAT-' + Math.floor(Math.random()*900));
   const noExpiry = document.getElementById('recNoExpiry').checked;
@@ -1235,7 +1418,7 @@ function submitSingleReceive() {
   const supplier = document.getElementById('recSupplier').value.trim() || 'توريد عام';
 
   if (!expiry || qty <= 0) {
-    alert('يرجى تحديد تاريخ انتهاء الصلاحية (أو تفعيل خيار بدون صلاحية للمستلزمات والأدوات) وإدخال كمية صحيحة.');
+    alert('يرجى تحديد تاريخ انتهاء الصلاحية (أو تفعيل خيار بدون صلاحية) وإدخال كمية صحيحة.');
     return;
   }
 
@@ -1246,7 +1429,7 @@ function submitSingleReceive() {
     existing.remaining += qty;
   } else {
     db.batches.unshift({
-      batchId: 'B' + Date.now(),
+      batchId: 'B-' + Date.now(),
       itemId, batchNo, initial: qty, remaining: qty, expiry, supplier, recDate
     });
   }
@@ -1257,6 +1440,7 @@ function submitSingleReceive() {
 // ==================== 3. الجرد والإتلاف والدليل ====================
 function submitDestruction() {
   const batchId = document.getElementById('destBatch').value;
+  if (!batchId) { alert('لا توجد تشغيلات متاحة للإتلاف.'); return; }
   const qty = Number(document.getElementById('destQty').value);
   const reason = document.getElementById('destReason').value;
   const committee = document.getElementById('destCommittee').value.trim() || 'لجنة الجرد الدائمة';
@@ -1267,9 +1451,12 @@ function submitDestruction() {
   const item = db.items.find(i => i.id === batch.itemId);
   batch.remaining -= qty;
   db.destructions.unshift({
+    destructionId: 'DST-' + Date.now(),
     date: todayStr,
+    itemId: batch.itemId,
     itemName: item ? item.name : '',
     category: item ? item.category : 'دواء',
+    batchId: batch.batchId,
     batchNo: batch.batchNo,
     expiry: batch.expiry === NO_EXPIRY_DATE ? 'بدون صلاحية' : batch.expiry,
     qty,
@@ -1403,7 +1590,10 @@ function renderAll() {
     document.getElementById('storageWarning').style.display = 'flex';
   }
 
-  const itemOpts = db.items.map(i => `<option value="${i.id}">[${i.category}] ${i.name} (${i.unit})</option>`).join('');
+  const itemOpts = db.items.length > 0
+    ? db.items.map(i => `<option value="${i.id}">[${i.category}] ${i.name} (${i.unit})</option>`).join('')
+    : '<option value="">-- لا توجد أصناف مسجلة بعد --</option>';
+
   document.getElementById('dispItem').innerHTML = itemOpts;
   document.getElementById('recItem').innerHTML = itemOpts;
 
@@ -1411,94 +1601,156 @@ function renderAll() {
   const uniqueBeneficiaries = [...new Set(db.dispensings.map(d => d.beneficiary))];
   document.getElementById('beneficiariesList').innerHTML = uniqueBeneficiaries.map(b => `<option value="${b}">`).join('');
 
-  // سجل الصرف
-  document.getElementById('dispenseTableBody').innerHTML = db.dispensings.map(d => `
-    <tr>
-      <td>${d.date}</td>
-      <td><strong>${d.beneficiary}</strong> (${d.benId})</td>
-      <td>${d.itemName}</td>
-      <td><span class="badge badge-cat">${d.category || 'دواء'}</span></td>
-      <td><strong>${d.qty}</strong></td>
-      <td>${d.batchNo}</td>
-      <td>${d.expiry}</td>
-    </tr>
-  `).join('');
+  // 1. سجل الصرف مع زر الإلغاء والاسترجاع
+  const dispBody = document.getElementById('dispenseTableBody');
+  if (db.dispensings.length === 0) {
+    dispBody.innerHTML = '<tr><td colspan="8" class="empty-row">لا توجد عمليات صرف مسجلة حتى الآن.</td></tr>';
+  } else {
+    dispBody.innerHTML = db.dispensings.map((d, idx) => `
+      <tr>
+        <td>${d.date}</td>
+        <td><strong>${d.beneficiary}</strong> (${d.benId})</td>
+        <td>${d.itemName}</td>
+        <td><span class="badge badge-cat">${d.category || 'دواء'}</span></td>
+        <td><strong>${d.qty}</strong></td>
+        <td>${d.batchNo}</td>
+        <td>${d.expiry}</td>
+        <td class="no-print">
+          <button class="danger-btn sm-btn" onclick="cancelDispenseRecord(${idx})">↩️ إلغاء الصرف</button>
+        </td>
+      </tr>
+    `).join('');
+  }
 
-  // سجل الاستلام
-  document.getElementById('receiveTableBody').innerHTML = db.batches.map(b => {
-    const item = db.items.find(i => i.id === b.itemId);
-    const expDisplay = b.expiry === NO_EXPIRY_DATE ? '<span class="badge badge-info">بدون صلاحية</span>' : b.expiry;
-    return `<tr>
-      <td>${b.recDate}</td>
-      <td><strong>${item ? item.name : ''}</strong></td>
-      <td><span class="badge badge-cat">${item ? item.category : ''}</span></td>
-      <td>${b.initial}</td>
-      <td><strong>${b.remaining}</strong></td>
-      <td>${b.batchNo}</td>
-      <td>${expDisplay}</td>
-      <td>${b.supplier}</td>
-    </tr>`;
-  }).join('');
+  // 2. سجل الاستلام مع أزرار التعديل والحذف
+  const recBody = document.getElementById('receiveTableBody');
+  if (db.batches.length === 0) {
+    recBody.innerHTML = '<tr><td colspan="9" class="empty-row">لا توجد واردات أو تشغيلات مستلمة حتى الآن.</td></tr>';
+  } else {
+    recBody.innerHTML = db.batches.map(b => {
+      const item = db.items.find(i => i.id === b.itemId);
+      const expDisplay = b.expiry === NO_EXPIRY_DATE ? '<span class="badge badge-info">بدون صلاحية</span>' : b.expiry;
+      return `<tr>
+        <td>${b.recDate}</td>
+        <td><strong>${item ? item.name : 'صنف محذوف'}</strong></td>
+        <td><span class="badge badge-cat">${item ? item.category : '-'}</span></td>
+        <td>${b.initial}</td>
+        <td><strong>${b.remaining}</strong></td>
+        <td>${b.batchNo}</td>
+        <td>${expDisplay}</td>
+        <td>${b.supplier}</td>
+        <td class="no-print">
+          <div class="toolbar">
+            <button class="info-btn sm-btn" onclick="openEditBatchModal('${b.batchId}')">✏️ تعديل</button>
+            <button class="danger-btn sm-btn" onclick="deleteBatch('${b.batchId}')">🗑️ حذف</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
 
-  // جدول الجرد مع الفلترة حسب التصنيف
+  // 3. جدول الجرد مع أزرار التعديل والحذف للصنف
   const catFilter = document.getElementById('invCategoryFilter').value;
   const filteredItems = db.items.filter(i => catFilter === 'ALL' || i.category === catFilter);
+  const invBody = document.getElementById('inventoryTableBody');
 
-  document.getElementById('inventoryTableBody').innerHTML = filteredItems.map(item => {
-    const itemBatches = db.batches.filter(b => b.itemId === item.id);
-    const totalIn = itemBatches.reduce((s, b) => s + b.initial, 0);
-    const totalRem = itemBatches.reduce((s, b) => s + b.remaining, 0);
-    const validRem = itemBatches.filter(b => b.expiry > todayStr).reduce((s, b) => s + b.remaining, 0);
-    const totalOut = totalIn - totalRem;
+  if (filteredItems.length === 0) {
+    invBody.innerHTML = '<tr><td colspan="9" class="empty-row">لا توجد أصناف مسجلة في الجرد حالياً. يمكنك إضافة الأصناف من التبويب الخامس أو عبر رفع فاتورة استلام.</td></tr>';
+  } else {
+    invBody.innerHTML = filteredItems.map(item => {
+      const itemBatches = db.batches.filter(b => b.itemId === item.id);
+      const totalIn = itemBatches.reduce((s, b) => s + b.initial, 0);
+      const totalRem = itemBatches.reduce((s, b) => s + b.remaining, 0);
+      const validRem = itemBatches.filter(b => b.expiry > todayStr).reduce((s, b) => s + b.remaining, 0);
+      const totalOut = totalIn - totalRem;
 
-    const batchAnalysis = itemBatches.filter(b => b.remaining > 0).map(b => {
-      if (b.expiry === NO_EXPIRY_DATE) {
-        return `<span class="badge badge-info">تشغيلة ${b.batchNo} (${b.remaining}): لا تخضع لتاريخ صلاحية</span>`;
-      }
-      const daysLeft = Math.ceil((new Date(b.expiry) - new Date(todayStr)) / (1000*60*60*24));
-      if (daysLeft <= 0) {
-        return `<span class="badge badge-err">تشغيلة ${b.batchNo}: منتهية (${b.remaining}) - محجوبة عن الصرف</span>`;
-      }
-      const expectedUse = item.dailyRate * daysLeft;
-      const riskQty = Math.max(0, Math.round(b.remaining - expectedUse));
-      if (riskQty > 0) {
-        return `<span class="badge badge-warn">تشغيلة ${b.batchNo} (${b.remaining}): خطر تلف ${riskQty} قبل ${b.expiry}</span>`;
-      }
-      return `<span class="badge badge-ok">تشغيلة ${b.batchNo} (${b.remaining}): آمنة حتى ${b.expiry}</span>`;
-    }).join('<br>');
+      const batchAnalysis = itemBatches.filter(b => b.remaining > 0).map(b => {
+        if (b.expiry === NO_EXPIRY_DATE) {
+          return `<span class="badge badge-info">تشغيلة ${b.batchNo} (${b.remaining}): لا تخضع لتاريخ صلاحية</span>`;
+        }
+        const daysLeft = Math.ceil((new Date(b.expiry) - new Date(todayStr)) / (1000*60*60*24));
+        if (daysLeft <= 0) {
+          return `<span class="badge badge-err">تشغيلة ${b.batchNo}: منتهية (${b.remaining}) - محجوبة عن الصرف</span>`;
+        }
+        const expectedUse = item.dailyRate * daysLeft;
+        const riskQty = Math.max(0, Math.round(b.remaining - expectedUse));
+        if (riskQty > 0) {
+          return `<span class="badge badge-warn">تشغيلة ${b.batchNo} (${b.remaining}): خطر تلف ${riskQty} قبل ${b.expiry}</span>`;
+        }
+        return `<span class="badge badge-ok">تشغيلة ${b.batchNo} (${b.remaining}): آمنة حتى ${b.expiry}</span>`;
+      }).join('<br>');
 
-    return `<tr>
-      <td><strong>${item.name}</strong><br><small style="color:var(--muted)">${item.active}</small></td>
-      <td><span class="badge badge-cat">${item.category}</span><br><small>${item.unit}</small></td>
-      <td>${totalIn}</td>
-      <td>${totalOut}</td>
-      <td><strong>${validRem}</strong></td>
-      <td><input type="number" value="${validRem}" style="width:75px;" oninput="calcVariance(this, ${validRem})"></td>
-      <td><span class="badge badge-ok">مطابق (0)</span></td>
-      <td>${batchAnalysis || '<span style="color:var(--muted)">رصيد صفر</span>'}</td>
-    </tr>`;
-  }).join('');
+      return `<tr>
+        <td><strong>${item.name}</strong><br><small style="color:var(--muted)">${item.active}</small></td>
+        <td><span class="badge badge-cat">${item.category}</span><br><small>${item.unit}</small></td>
+        <td>${totalIn}</td>
+        <td>${totalOut}</td>
+        <td><strong>${validRem}</strong></td>
+        <td><input type="number" value="${validRem}" style="width:75px;" oninput="calcVariance(this, ${validRem})"></td>
+        <td><span class="badge badge-ok">مطابق (0)</span></td>
+        <td>${batchAnalysis || '<span style="color:var(--muted)">لا يوجد رصيد مستلم</span>'}</td>
+        <td class="no-print">
+          <div class="toolbar">
+            <button class="info-btn sm-btn" onclick="openEditItemModal('${item.id}')">✏️ تعديل</button>
+            <button class="danger-btn sm-btn" onclick="deleteItem('${item.id}')">🗑️ حذف</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
 
-  // قائمة الإتلاف
+  // 4. قائمة وسجل الإتلاف مع زر الإلغاء
   const activeBatches = db.batches.filter(b => b.remaining > 0).sort((a,b) => new Date(a.expiry) - new Date(b.expiry));
-  document.getElementById('destBatch').innerHTML = activeBatches.map(b => {
-    const item = db.items.find(i => i.id === b.itemId);
-    const isExp = b.expiry <= todayStr ? ' ⚠️ [منتهية الصلاحية]' : '';
-    const expLabel = b.expiry === NO_EXPIRY_DATE ? 'بدون صلاحية' : b.expiry;
-    return `<option value="${b.batchId}">[${item ? item.category : ''}] ${item ? item.name : ''} — تشغيلة ${b.batchNo} (متاح: ${b.remaining} | ${expLabel})${isExp}</option>`;
-  }).join('');
+  document.getElementById('destBatch').innerHTML = activeBatches.length > 0
+    ? activeBatches.map(b => {
+        const item = db.items.find(i => i.id === b.itemId);
+        const isExp = b.expiry <= todayStr ? ' ⚠️ [منتهية الصلاحية]' : '';
+        const expLabel = b.expiry === NO_EXPIRY_DATE ? 'بدون صلاحية' : b.expiry;
+        return `<option value="${b.batchId}">[${item ? item.category : ''}] ${item ? item.name : ''} — تشغيلة ${b.batchNo} (متاح: ${b.remaining} | ${expLabel})${isExp}</option>`;
+      }).join('')
+    : '<option value="">-- لا توجد تشغيلات متاحة --</option>';
 
-  document.getElementById('destroyTableBody').innerHTML = db.destructions.map(d => `
-    <tr>
-      <td>${d.date}</td>
-      <td><strong>${d.itemName}</strong></td>
-      <td><span class="badge badge-cat">${d.category || 'دواء'}</span></td>
-      <td>${d.batchNo}</td>
-      <td>${d.expiry}</td>
-      <td><strong>${d.qty}</strong></td>
-      <td>${d.info}</td>
-    </tr>
-  `).join('');
+  const destBody = document.getElementById('destroyTableBody');
+  if (db.destructions.length === 0) {
+    destBody.innerHTML = '<tr><td colspan="8" class="empty-row">لا توجد محاضر إتلاف مسجلة.</td></tr>';
+  } else {
+    destBody.innerHTML = db.destructions.map((d, idx) => `
+      <tr>
+        <td>${d.date}</td>
+        <td><strong>${d.itemName}</strong></td>
+        <td><span class="badge badge-cat">${d.category || 'دواء'}</span></td>
+        <td>${d.batchNo}</td>
+        <td>${d.expiry}</td>
+        <td><strong>${d.qty}</strong></td>
+        <td>${d.info}</td>
+        <td class="no-print">
+          <button class="warning-btn sm-btn" onclick="cancelDestructionRecord(${idx})">↩️ إلغاء واسترجاع</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // 5. جدول إدارة الدليل في التبويب الخامس
+  const catBody = document.getElementById('catalogTableBody');
+  if (db.items.length === 0) {
+    catBody.innerHTML = '<tr><td colspan="6" class="empty-row">الدليل فارغ حالياً. أضف أصنافك يدوياً أو عبر استيراد ملف CSV أو برفع فاتورة في تبويب الاستلام.</td></tr>';
+  } else {
+    catBody.innerHTML = db.items.map(item => `
+      <tr>
+        <td><strong>${item.name}</strong></td>
+        <td><span class="badge badge-cat">${item.category}</span></td>
+        <td>${item.unit}</td>
+        <td>${item.active}</td>
+        <td>${item.dailyRate}</td>
+        <td>
+          <div class="toolbar">
+            <button class="info-btn sm-btn" onclick="openEditItemModal('${item.id}')">✏️ تعديل</button>
+            <button class="danger-btn sm-btn" onclick="deleteItem('${item.id}')">🗑️ حذف</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
 
   checkItemAvailability();
 }
