@@ -3,1748 +3,789 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>منصة تحليلات ومعايرة مياه المخيم</title>
-  
-  <!-- خط Cairo العربي ومكتبة Chart.js -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+  <title>نظام الصيدلية الذكي - النسخة التشغيلية الكاملة</title>
   <style>
     :root {
-      --bg: #0b1329;
-      --surface: #131f38;
-      --surface-alt: #1b2a4a;
-      --surface-hover: rgba(56, 189, 248, 0.06);
-      --border: #24375c;
-      --text: #f8fafc;
-      --text-secondary: #94a3b8;
-      --primary: #38bdf8;
-      --primary-strong: #0369a1;
-      --primary-contrast: #ffffff;
-      --success: #10b981;
-      --success-bg: rgba(16, 185, 129, 0.14);
-      --warning: #f59e0b;
-      --warning-bg: rgba(245, 158, 11, 0.14);
-      --danger: #ef4444;
-      --danger-bg: rgba(239, 68, 68, 0.14);
-      --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-      --chart-grid: #1e293b;
-      --chart-text: #94a3b8;
-    }
-
-    [data-theme="light"] {
-      --bg: #f1f5f9;
-      --surface: #ffffff;
-      --surface-alt: #f8fafc;
-      --surface-hover: rgba(3, 105, 161, 0.05);
-      --border: #cbd5e1;
-      --text: #0f172a;
-      --text-secondary: #475569;
-      --primary: #0369a1;
-      --primary-strong: #0369a1;
-      --primary-contrast: #ffffff;
-      --success: #047857;
-      --success-bg: rgba(4, 120, 87, 0.12);
+      --primary: #0f766e;
+      --primary-light: #ccfbf1;
+      --danger: #be123c;
+      --danger-light: #ffe4e6;
       --warning: #b45309;
-      --warning-bg: rgba(180, 83, 9, 0.12);
-      --danger: #b91c1c;
-      --danger-bg: rgba(185, 28, 28, 0.12);
-      --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-      --chart-grid: #e2e8f0;
-      --chart-text: #475569;
+      --warning-light: #fef3c7;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --border: #cbd5e1;
     }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); padding: 15px; }
+    .container { max-width: 1150px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: #fff; padding: 15px 20px; border-radius: 10px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+    header h1 { margin: 0; font-size: 1.25rem; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+    .tab-btn { flex: 1; min-width: 135px; padding: 11px; border: 1px solid var(--border); background: var(--card); border-radius: 8px; cursor: pointer; font-weight: bold; color: var(--text); transition: 0.2s; }
+    .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .panel { display: none; background: var(--card); padding: 20px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 20px; }
+    .panel.active { display: block; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 15px; }
+    label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; }
+    input, select { width: 100%; padding: 9px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; }
+    button.action-btn { background: var(--primary); color: #fff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.95rem; }
+    button.secondary-btn { background: #334155; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+    button.danger-btn { background: var(--danger); color: #fff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .ai-box { background: var(--primary-light); border: 1px solid var(--primary); padding: 12px; border-radius: 8px; margin-bottom: 15px; }
+    .alert-box { background: var(--warning-light); border: 1px solid var(--warning); color: var(--warning); padding: 10px; border-radius: 6px; margin-top: 10px; margin-bottom: 12px; font-size: 0.9rem; display: none; }
+    .repeat-box { background: var(--danger-light); border: 1px solid var(--danger); color: var(--danger); padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 0.9rem; display: none; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
+    th, td { border: 1px solid var(--border); padding: 9px; text-align: right; }
+    th { background: #f1f5f9; }
+    .badge { padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; display: inline-block; margin-bottom: 3px; }
+    .badge-ok { background: #dcfce7; color: #166534; }
+    .badge-warn { background: var(--warning-light); color: var(--warning); }
+    .badge-err { background: var(--danger-light); color: var(--danger); }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .print-only { display: none; }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Cairo', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      padding: 14px;
-      line-height: 1.55;
-      min-height: 100vh;
-      transition: background-color 0.25s, color 0.25s;
-    }
-
-    .num {
-      font-variant-numeric: tabular-nums;
-      direction: ltr;
-      display: inline-block;
-    }
-
-    .container {
-      max-width: 1220px;
-      margin: 0 auto;
-      display: none;
-      padding-bottom: 40px;
-    }
-
-    /* شاشة القفل برمز PIN */
-    #lockScreen {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      padding: 16px;
-    }
-    .lock-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 30px 24px;
-      border-radius: 16px;
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
-      box-shadow: var(--shadow);
-    }
-    .lock-box h2 { font-size: 1.3rem; color: var(--primary); margin-bottom: 6px; font-weight: 800; }
-    .lock-box p { font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 20px; }
-    .lock-input {
-      width: 100%;
-      min-height: 52px;
-      padding: 12px;
-      font-size: 1.5rem;
-      text-align: center;
-      letter-spacing: 8px;
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      background: var(--bg);
-      color: var(--text);
-      outline: none;
-      margin-bottom: 16px;
-      font-variant-numeric: tabular-nums;
-    }
-    .lock-input:focus { border-color: var(--primary); }
-    .btn-unlock {
-      width: 100%;
-      min-height: 50px;
-      background: var(--primary-strong);
-      color: #fff;
-      border: none;
-      padding: 12px;
-      border-radius: 10px;
-      font-size: 1.05rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .btn-unlock:hover { opacity: 0.92; }
-    .lock-error { color: var(--danger); font-size: 0.85rem; margin-top: 12px; display: none; font-weight: 600; }
-
-    /* الهيدر العلوي */
-    .top-bar {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px 18px;
-      margin-bottom: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 14px;
-      box-shadow: var(--shadow);
-    }
-    .brand-title h1 { font-size: 1.3rem; color: var(--primary); font-weight: 800; line-height: 1.3; }
-    .sync-status { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; display: flex; align-items: center; gap: 6px; }
-    .status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--success); display: inline-block; }
-    .status-dot.offline { background: var(--warning); }
-
-    .header-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .cycle-selector {
-      min-height: 48px;
-      padding: 8px 14px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--surface-alt);
-      color: var(--text);
-      font-weight: 700;
-      font-size: 0.88rem;
-      outline: none;
-      cursor: pointer;
-    }
-    .cycle-selector:focus { border-color: var(--primary); }
-
-    .btn-action {
-      min-height: 48px;
-      background: var(--primary-strong);
-      color: #fff;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 10px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: 0.2s;
-      font-size: 0.86rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .btn-action:hover { opacity: 0.9; }
-    .btn-secondary {
-      background: var(--surface-alt);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-    .btn-export { background: #047857; }
-
-    /* كروت المؤشرات العلوية */
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
-      gap: 12px;
-      margin-bottom: 18px;
-    }
-    .metric-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px 16px;
-      text-align: center;
-      box-shadow: var(--shadow);
-      position: relative;
-      overflow: hidden;
-    }
-    .metric-card::before {
-      content: "";
-      position: absolute;
-      top: 0; right: 0; left: 0;
-      height: 3px;
-      background: var(--primary);
-      opacity: 0.7;
-    }
-    .metric-card span { font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 4px; font-weight: 600; }
-    .metric-card strong { font-size: 1.45rem; color: var(--primary); display: block; font-weight: 800; }
-    .metric-card small { font-size: 0.75rem; color: var(--text-secondary); display: block; margin-top: 2px; }
-
-    /* شريط التبويبات الذكي */
-    .tabs-nav {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 18px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      scrollbar-width: thin;
-    }
-    .tab-btn {
-      min-height: 48px;
-      padding: 10px 18px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text-secondary);
-      font-weight: 700;
-      font-size: 0.9rem;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      flex: 1;
-      justify-content: center;
-    }
-    .tab-btn:hover { border-color: var(--primary); color: var(--text); }
-    .tab-btn.active {
-      background: var(--primary-strong);
-      color: #ffffff;
-      border-color: var(--primary-strong);
-      box-shadow: 0 4px 14px rgba(3, 105, 161, 0.35);
-    }
-
-    /* الحاويات والأقسام */
-    .tab-section { display: none; }
-    .tab-section.active { display: block; }
-
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: var(--shadow);
-      overflow-x: auto;
-    }
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 12px;
-    }
-    .panel-header h2 { font-size: 1.1rem; color: var(--text); font-weight: 800; }
-
-    /* شريط الفلترة وكبسولات العائلات */
-    .filter-card {
-      background: var(--surface-alt);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 16px;
-    }
-    .filter-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 1px dashed var(--border);
-    }
-    .checkbox-label {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      user-select: none;
-      font-weight: 700;
-      font-size: 0.88rem;
-      min-height: 36px;
-    }
-    .checkbox-label input { width: 20px; height: 20px; accent-color: var(--primary-strong); cursor: pointer; }
-
-    .chips-title {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .chips-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .fam-chip {
-      min-height: 40px;
-      padding: 6px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--primary);
-      background: rgba(56, 189, 248, 0.1);
-      color: var(--text);
-      font-size: 0.82rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: 0.15s;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      user-select: none;
-    }
-    .fam-chip.excluded {
-      border-color: var(--border);
-      background: var(--bg);
-      color: var(--text-secondary);
-      opacity: 0.55;
-      text-decoration: line-through;
-    }
-
-    /* صندوق نتائج معايرة ألفا */
-    .calibration-box {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
-      background: var(--surface-alt);
-      border: 2px dashed var(--primary);
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 18px;
-    }
-    .calibration-item span { font-size: 0.78rem; color: var(--text-secondary); display: block; font-weight: 600; }
-    .calibration-item strong { font-size: 1.35rem; color: var(--text); font-weight: 800; }
-
-    /* محاكي التوزيع التفاعلي */
-    .sim-controls {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
-      background: var(--surface-alt);
-      padding: 16px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      margin-bottom: 18px;
-      align-items: end;
-    }
-    .control-group label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      margin-bottom: 8px;
-      font-weight: 700;
-    }
-    .control-group label strong { color: var(--primary); font-size: 1rem; }
-    .control-input {
-      width: 100%;
-      min-height: 48px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      font-size: 0.95rem;
-      font-weight: 700;
-      outline: none;
-    }
-    .control-input:focus { border-color: var(--primary); }
-    input[type="range"] { width: 100%; accent-color: var(--primary-strong); height: 8px; cursor: pointer; }
-
-    /* الجداول والفرز التفاعلي */
-    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: right; min-width: 820px; }
-    th, td { padding: 12px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-    th {
-      color: var(--text-secondary);
-      font-weight: 700;
-      background: var(--surface-alt);
-      white-space: nowrap;
-      user-select: none;
-    }
-    th.sortable { cursor: pointer; transition: color 0.15s; }
-    th.sortable:hover { color: var(--primary); }
-    .sort-indicator { display: inline-block; margin-right: 4px; font-size: 0.75rem; color: var(--primary); font-weight: 800; }
-
-    tr.clickable-row { cursor: pointer; transition: background 0.15s; }
-    tr.clickable-row:hover { background: var(--surface-hover); }
-
-    /* الشارات (Tags) */
-    .tag {
-      display: inline-block;
-      padding: 4px 9px;
-      border-radius: 8px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-    .tag-blue { background: rgba(56, 189, 248, 0.15); color: var(--primary); }
-    .tag-green { background: var(--success-bg); color: var(--success); }
-    .tag-amber { background: var(--warning-bg); color: var(--warning); }
-    .tag-red { background: var(--danger-bg); color: var(--danger); }
-
-    /* خلية نصيب الفرد بالتدرج الحراري الهادئ */
-    .per-capita-cell {
-      border-radius: 8px;
-      padding: 6px 10px;
-      display: inline-block;
-      min-width: 115px;
-      text-align: center;
-      border: 1px solid transparent;
-    }
-    .sub-metric {
-      display: block;
-      font-size: 0.73rem;
-      color: var(--text-secondary);
-      margin-top: 2px;
-      font-weight: 600;
-    }
-
-    .chart-container { position: relative; width: 100%; height: 350px; }
-    .loading-msg { text-align: center; padding: 40px; color: var(--text-secondary); font-size: 1.05rem; font-weight: 700; }
-
-    /* النافذة السفلية المنبثقة (Bottom Sheet Modal) */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.65);
-      z-index: 2000;
-      display: none;
-      justify-content: center;
-      align-items: flex-end;
-      backdrop-filter: blur(2px);
-    }
-    .modal-backdrop.open { display: flex; }
-    .bottom-sheet {
-      background: var(--surface);
-      border-top: 2px solid var(--primary);
-      border-radius: 20px 20px 0 0;
-      width: 100%;
-      max-width: 780px;
-      max-height: 86vh;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.5);
-      animation: slideUp 0.22s ease-out;
-    }
-    @keyframes slideUp {
-      from { transform: translateY(100%); }
-      to { transform: translateY(0); }
-    }
-    .sheet-handle {
-      width: 48px;
-      height: 5px;
-      background: var(--border);
-      border-radius: 99px;
-      margin: 10px auto 4px;
-    }
-    .sheet-header {
-      padding: 12px 20px 14px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-    }
-    .sheet-header h3 { font-size: 1.15rem; color: var(--primary); font-weight: 800; }
-    .btn-close-sheet {
-      min-height: 44px;
-      min-width: 44px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--surface-alt);
-      color: var(--text);
-      font-size: 1.1rem;
-      font-weight: 800;
-      cursor: pointer;
-    }
-    .sheet-body {
-      padding: 18px 20px 28px;
-      overflow-y: auto;
-    }
-    .log-cycle-group {
-      background: var(--surface-alt);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 14px;
-    }
-    .log-cycle-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 10px;
-      padding-bottom: 8px;
-      border-bottom: 1px dashed var(--border);
-      font-weight: 700;
-    }
-    .log-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 10px;
-      border-radius: 8px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      margin-bottom: 6px;
-      font-size: 0.85rem;
-    }
-
-    @media (max-width: 640px) {
-      body { padding: 10px; }
-      .top-bar { padding: 14px; }
-      .panel { padding: 14px; }
-      .tab-btn { font-size: 0.82rem; padding: 8px 12px; }
+    @media print {
+      body { background: #fff; padding: 0; }
+      header, .tabs, .no-print { display: none !important; }
+      .panel { border: none; padding: 0; }
+      .print-only { display: block !important; margin-top: 30px; }
+      .sig-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; margin-top: 40px; font-weight: bold; }
     }
   </style>
 </head>
 <body>
 
-  <!-- شاشة القفل برمز PIN المشفر -->
-  <div id="lockScreen">
-    <div class="lock-box">
-      <h2>🔒 منصة تحليلات ومعايرة المياه</h2>
-      <p>أدخل رمز PIN للوصول إلى الإحصائيات ومحاكي التوزيع</p>
-      <input type="password" id="pinInput" class="lock-input" maxlength="10" placeholder="••••" onkeydown="if(event.key==='Enter') checkUnlock()">
-      <button class="btn-unlock" onclick="checkUnlock()">فتح اللوحة</button>
-      <div id="lockError" class="lock-error">رمز PIN غير صحيح</div>
+<div class="container">
+  <header>
+    <h1>نظام الصيدلية الذكي (النسخة التشغيلية الكاملة)</h1>
+    <div class="toolbar">
+      <button class="secondary-btn" onclick="exportInventoryCSV()">📊 تصدير الجرد لـ Excel</button>
+      <button class="secondary-btn" onclick="downloadBackup()">💾 حفظ نسخة احتياطية</button>
     </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('dispense', this)">1. نموذج الصرف الذكي</button>
+    <button class="tab-btn" onclick="switchTab('receive', this)">2. نموذج الاستلام</button>
+    <button class="tab-btn" onclick="switchTab('inventory', this)">3. الجرد وتنبيهات التلف</button>
+    <button class="tab-btn" onclick="switchTab('destroy', this)">4. محضر الإتلاف</button>
+    <button class="tab-btn" onclick="switchTab('settings', this)">5. دليل الأصناف والـ AI</button>
   </div>
 
-  <!-- الحاوية الرئيسية -->
-  <div class="container" id="mainContainer">
-    <!-- الشريط العلوي -->
-    <div class="top-bar">
-      <div class="brand-title">
-        <h1>📊 منصة تحليلات ومعايرة استهلاك مياه المخيم</h1>
-        <div class="sync-status">
-          <span id="syncDot" class="status-dot"></span>
-          <span id="syncText">جاري فحص الاتصال...</span>
-        </div>
+  <!-- 1. نموذج الصرف -->
+  <div id="dispense" class="panel active">
+    <div class="ai-box no-print">
+      <label>مساعد قراءة الوصفات الطبية (كاميرا الذكاء الاصطناعي أو الصوت أو الحروف المتقطعة مثل "امو..500"):</label>
+      <div class="toolbar" style="margin-top:6px;">
+        <input type="text" id="smartSearch" style="flex:1; min-width:200px;" placeholder="اكتب الحروف المقروءة مثل: امو..500 أو انطق الاسم..." oninput="handleSmartSearch()">
+        <button type="button" class="action-btn" onclick="startVoiceInput()">🎤 نطق</button>
+        <label class="secondary-btn" style="margin:0; cursor:pointer;">
+          📷 تصوير وصفة بالـ AI
+          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="analyzePrescriptionImage(event)">
+        </label>
       </div>
+      <div id="searchSuggestions" style="margin-top:8px; font-size:0.85rem;"></div>
+    </div>
 
-      <div class="header-controls">
-        <!-- فلتر اختيار الدورة -->
-        <select id="cycleFilterSelect" class="cycle-selector" onchange="reprocessCurrentData()">
-          <option value="ALL">📚 كل الدورات المؤرشفة (تراكمي)</option>
+    <div class="grid no-print">
+      <div>
+        <label>اسم المستفيد</label>
+        <input type="text" id="dispBeneficiary" placeholder="الاسم الثلاثي للمستفيد" oninput="checkRepeatDispense()">
+      </div>
+      <div>
+        <label>رقم الهوية / الملف</label>
+        <input type="text" id="dispBenId" placeholder="فحص تكرار الصرف تلقائياً" oninput="checkRepeatDispense()">
+      </div>
+      <div>
+        <label>تاريخ الاستفادة</label>
+        <input type="date" id="dispDate">
+      </div>
+      <div>
+        <label>الصنف المطلوب</label>
+        <select id="dispItem" onchange="checkItemAvailability(); checkRepeatDispense();"></select>
+      </div>
+      <div>
+        <label>الكمية المصروفة</label>
+        <input type="number" id="dispQty" value="1" min="1" oninput="checkItemAvailability()">
+      </div>
+    </div>
+
+    <div id="repeatAlert" class="repeat-box no-print"></div>
+    <div id="dispAlert" class="alert-box no-print"></div>
+    <button class="action-btn no-print" onclick="submitDispense()">تأكيد الصرف (خصم تلقائي للأقرب صلاحية FEFO)</button>
+
+    <h3>سجل عمليات الصرف</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>تاريخ الاستفادة</th>
+          <th>المستفيد (الهوية)</th>
+          <th>الصنف المصروف</th>
+          <th>الكمية</th>
+          <th>التشغيلة المخصوم منها</th>
+          <th>تاريخ انتهائها</th>
+        </tr>
+      </thead>
+      <tbody id="dispenseTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- 2. نموذج الاستلام -->
+  <div id="receive" class="panel">
+    <div class="ai-box no-print" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <span><strong>إدخال الفواتير بالذكاء الاصطناعي:</strong> صور فاتورة المورد أو علبة الدواء لاستخراج البيانات وتاريخ الصلاحية فوراً.</span>
+      <label class="secondary-btn" style="margin:0; cursor:pointer;">
+        📷 تصوير فاتورة مورد بالـ AI
+        <input type="file" accept="image/*" capture="environment" style="display:none" onchange="analyzeInvoiceImage(event)">
+      </label>
+    </div>
+
+    <div class="grid no-print">
+      <div>
+        <label>الصنف المستلم</label>
+        <select id="recItem"></select>
+      </div>
+      <div>
+        <label>الكمية المستلمة</label>
+        <input type="number" id="recQty" min="1" value="50">
+      </div>
+      <div>
+        <label>رقم التشغيلة (Batch No)</label>
+        <input type="text" id="recBatch" placeholder="مثال: B-204">
+      </div>
+      <div>
+        <label>تاريخ انتهاء الصلاحية</label>
+        <input type="date" id="recExpiry">
+      </div>
+      <div>
+        <label>تاريخ الاستلام</label>
+        <input type="date" id="recDate">
+      </div>
+      <div>
+        <label>الجهة الموردة</label>
+        <input type="text" id="recSupplier" placeholder="اسم المورد أو المستودع">
+      </div>
+    </div>
+    <button class="action-btn no-print" onclick="submitReceive()">حفظ الاستلام وإضافة التشغيلة للمخزون</button>
+
+    <h3>سجل الواردات والاستلام</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>تاريخ الاستلام</th>
+          <th>الصنف</th>
+          <th>الكمية</th>
+          <th>رقم التشغيلة</th>
+          <th>تاريخ الانتهاء</th>
+          <th>الجهة الموردة</th>
+        </tr>
+      </thead>
+      <tbody id="receiveTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- 3. نموذج الجرد -->
+  <div id="inventory" class="panel">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+      <h3>الجرد الشامل ومطابقة الرصيد الفعلي وتحليل خطر التلف</h3>
+      <button class="secondary-btn no-print" onclick="exportInventoryCSV()">📥 تحميل جدول الجرد (Excel)</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>الصنف (المادة الفعالة)</th>
+          <th>إجمالي الوارد</th>
+          <th>إجمالي الصادر</th>
+          <th>الرصيد الدفتري الصالح</th>
+          <th>الجرد الفعلي (الرف)</th>
+          <th>العجز / الزيادة</th>
+          <th>تحليل الصلاحية وخطر التلف (AI Burn-Rate)</th>
+        </tr>
+      </thead>
+      <tbody id="inventoryTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- 4. نموذج محضر إتلاف -->
+  <div id="destroy" class="panel">
+    <div class="print-only">
+      <h2 style="text-align:center;">محضر رسمي لإتلاف أصناف دوائية منتهية الصلاحية / تالفة</h2>
+      <p style="text-align:center;">إنه في يوم الموافق <span id="printDate"></span> قامت لجنة الجرد والإتلاف بمعاينة وحصر الأصناف التالية واعتماد إتلافها:</p>
+    </div>
+
+    <div class="grid no-print">
+      <div>
+        <label>التشغيلة المنتهية أو التالفة</label>
+        <select id="destBatch"></select>
+      </div>
+      <div>
+        <label>الكمية المراد إتلافها</label>
+        <input type="number" id="destQty" min="1" value="1">
+      </div>
+      <div>
+        <label>سبب الإتلاف</label>
+        <select id="destReason">
+          <option value="انتهاء تاريخ الصلاحية">انتهاء تاريخ الصلاحية</option>
+          <option value="تلف سوء تخزين أو كسر">تلف سوء تخزين أو كسر</option>
         </select>
-
-        <!-- زر تبديل المظهر (تلقائي / داكن / فاتح) -->
-        <button id="themeToggleBtn" class="btn-action btn-secondary" onclick="cycleThemeMode()" title="تبديل المظهر">
-          🌗 تلقائي
-        </button>
-
-        <button class="btn-action" onclick="fetchHistoryData()">🔄 تحديث</button>
-        <button class="btn-action btn-export" onclick="exportToCSV()">📥 تصدير CSV</button>
-        <button class="btn-action btn-secondary" onclick="lockDashboard()">🔒 قفل</button>
+      </div>
+      <div>
+        <label>أعضاء لجنة الإتلاف</label>
+        <input type="text" id="destCommittee" placeholder="أسماء أعضاء اللجنة">
       </div>
     </div>
+    <div class="toolbar no-print">
+      <button class="danger-btn" onclick="submitDestruction()">اعتماد محضر الإتلاف وخصم الكمية</button>
+      <button class="secondary-btn" onclick="window.print()">🖨️ طباعة محضر الإتلاف الرسمي بالتوقيعات</button>
+    </div>
 
-    <div id="loading" class="loading-msg">جاري قراءة البيانات التاريخية من السحابة...</div>
+    <h3>سجل محاضر الإتلاف المعتمدة</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>تاريخ المحضر</th>
+          <th>الصنف</th>
+          <th>رقم التشغيلة</th>
+          <th>تاريخ انتهائها</th>
+          <th>الكمية المتلفة</th>
+          <th>السبب واللجنة</th>
+        </tr>
+      </thead>
+      <tbody id="destroyTableBody"></tbody>
+    </table>
 
-    <div id="dashboardContent" style="display: none;">
-      <!-- كروت المؤشرات الكلية (KPIs) -->
-      <div class="metrics-grid">
-        <div class="metric-card">
-          <span id="kpiLabelCycles">إجمالي الدورات</span>
-          <strong id="metricCycles" class="num">0</strong>
-          <small id="metricAvgDuration">متوسط المدة: —</small>
-        </div>
-        <div class="metric-card">
-          <span>إجمالي السحب الفعلي</span>
-          <strong id="metricTotalConsumed" class="num">0 لتر</strong>
-          <small id="metricNetRatio">من أصل — متاح صافي</small>
-        </div>
-        <div class="metric-card">
-          <span>متوسط سحب المخيم بالدورة</span>
-          <strong id="metricAvgCycle" class="num">0 لتر</strong>
-          <small id="metricActiveFamsSub">للعائلات المسجلة</small>
-        </div>
-        <div class="metric-card">
-          <span>متوسط نصيب الفرد بالدورة</span>
-          <strong id="metricPerCapita" class="num">0 لتر</strong>
-          <small id="metricCumulativePerCapitaSub">التراكمي للفرد: —</small>
-        </div>
-        <div class="metric-card">
-          <span>معدل استهلاك الفرد اليومي</span>
-          <strong id="metricDailyPerCapita" class="num" style="color:var(--success);">0 لتر/يوم</strong>
-          <small>معياري حسب ساعات الدورة</small>
-        </div>
-      </div>
-
-      <!-- شريط التبويبات الذكية -->
-      <div class="tabs-nav">
-        <button class="tab-btn active" data-tab="tab-calibration" onclick="switchTab('tab-calibration')">📐 معايرة المرونة (&alpha;)</button>
-        <button class="tab-btn" data-tab="tab-simulator" onclick="switchTab('tab-simulator')">🎛️ محاكي التوزيع</button>
-        <button class="tab-btn" data-tab="tab-families" onclick="switchTab('tab-families')">⛺ أداء العائلات وحصة الفرد</button>
-        <button class="tab-btn" data-tab="tab-cycles" onclick="switchTab('tab-cycles')">🗓️ أرشيف الدورات</button>
-        <button class="tab-btn" data-tab="ALL" onclick="switchTab('ALL')">📋 عرض الكل</button>
-      </div>
-
-      <!-- التبويب 1: معايرة معامل المرونة واختبار وفورات الحجم -->
-      <div id="tab-calibration" class="tab-section active">
-        <div class="panel">
-          <div class="panel-header">
-            <h2>1. المعايرة الإحصائية لمعامل مرونة وفورات الحجم (&alpha;)</h2>
-            <span style="font-size:0.82rem; color:var(--text-secondary); font-weight:700;">المعادلة اللاخطية: استهلاك الأسرة = K &times; (الأفراد)<sup>&alpha;</sup></span>
-          </div>
-
-          <!-- أدوات تنظيف الشواذ وكبسولات استثناء العائلات -->
-          <div class="filter-card">
-            <div class="filter-top">
-              <label class="checkbox-label">
-                <input type="checkbox" id="filterOutliersToggle" checked onchange="reprocessCurrentData()">
-                <span>استبعاد السحوبات الهامشية/العابرة تلقائياً (أقل من 10 لتر للفرد بالدورة) لمنع تشوه الانحدار</span>
-              </label>
-              <span id="excludedCountBadge" class="tag tag-amber">تم استبعاد: 0 حالات</span>
-            </div>
-
-            <div class="chips-title">
-              <span><strong>فلتر العائلات التفاعلي:</strong> اضغط على أي عائلة لاستثنائها مؤقتاً من حساب المعامل (&alpha;) ومشاهدة أثرها الفوري:</span>
-              <button class="btn-action btn-secondary" style="min-height:32px; padding:4px 10px; font-size:0.76rem;" onclick="resetExcludedFamilies()">إعادة تفعيل الكل</button>
-            </div>
-            <div id="familyChipsContainer" class="chips-container"></div>
-          </div>
-
-          <!-- نتائج المعايرة الرياضية -->
-          <div class="calibration-box">
-            <div class="calibration-item">
-              <span>المعامل الفعلي المستنتج (&alpha;)</span>
-              <strong id="empiricalAlpha" class="num" style="color:var(--primary);">—</strong>
-            </div>
-            <div class="calibration-item">
-              <span>قوة ارتباط النموذج الواقعي (R&sup2;)</span>
-              <strong id="rSquaredVal" class="num" style="color:var(--success);">—</strong>
-            </div>
-            <div class="calibration-item">
-              <span>معامل الفرد الأساسي (K)</span>
-              <strong id="baseKVal" class="num">—</strong>
-            </div>
-            <div class="calibration-item">
-              <span>المعامل النظري المرجعي</span>
-              <strong class="num" style="color:var(--warning);">&alpha; = 0.58</strong>
-            </div>
-            <div class="calibration-item" style="grid-column: 1 / -1; border-top: 1px solid var(--border); padding-top: 10px;">
-              <span>التشخيص الإحصائي لسلوك الاستهلاك:</span>
-              <p id="alphaEvaluation" style="font-size:0.88rem; color:var(--text); margin-top:4px; font-weight:600;">—</p>
-            </div>
-          </div>
-
-          <div class="chart-container" style="margin-bottom: 20px;">
-            <canvas id="elasticityChart"></canvas>
-          </div>
-
-          <table>
-            <thead>
-              <tr>
-                <th>فئة حجم الأسرة</th>
-                <th>السجلات النشطة المعتمدة</th>
-                <th>متوسط سحب الأسرة بالدورة</th>
-                <th>متوسط نصيب الفرد الفعلي</th>
-                <th>الحصة المقترحة بالمحاكي</th>
-                <th>وفر الفرد مقارنة بالفئة الأصغر</th>
-              </tr>
-            </thead>
-            <tbody id="elasticityTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- التبويب 2: محاكي التوزيع التفاعلي -->
-      <div id="tab-simulator" class="tab-section">
-        <div class="panel">
-          <div class="panel-header">
-            <h2>2. محاكي التوزيع التفاعلي واختبار الفائض والعجز (Stress-Test)</h2>
-            <button class="btn-action" style="min-height:40px; padding:6px 14px; font-size:0.82rem;" onclick="applyEmpiricalAlphaToSim()">
-              ⚡ تطبيق &alpha; المستنتج واقعياً
-            </button>
-          </div>
-
-          <div class="sim-controls">
-            <div class="control-group">
-              <label>
-                <span>معامل المرونة للمحاكاة (&alpha;):</span>
-                <strong id="simAlphaLabel" class="num">0.58</strong>
-              </label>
-              <input type="range" id="simAlphaSlider" min="0.00" max="1.00" step="0.01" value="0.58" oninput="updateSimulator()">
-              <div style="display:flex; justify-content:space-between; font-size:0.73rem; color:var(--text-secondary); margin-top:4px; font-weight:600;">
-                <span>0.00 (تساوي للعائلات)</span>
-                <span>0.58 (مرجعي)</span>
-                <span>1.00 (تساوي للأفراد)</span>
-              </div>
-            </div>
-
-            <div class="control-group">
-              <label><span>صافي المياه المتاحة للتوزيع (بعد الاحتياطي):</span></label>
-              <input type="number" id="simNetWaterInput" class="control-input num" value="3600" step="100" min="500" oninput="updateSimulator()">
-            </div>
-
-            <div class="control-group">
-              <label><span>تقريب حصص العائلات:</span></label>
-              <select id="simRoundingSelect" class="control-input" onchange="updateSimulator()">
-                <option value="1">تقريب لأقرب 1 لتر (دقيق)</option>
-                <option value="5" selected>تقريب لأقرب 5 لتر (عملي)</option>
-              </select>
-            </div>
-          </div>
-
-          <table>
-            <thead>
-              <tr>
-                <th>الخيمة</th>
-                <th>اسم العائلة</th>
-                <th>الأفراد</th>
-                <th>متوسط سحب الأسرة الفعلي</th>
-                <th>الحصة المقترحة بالمحاكي</th>
-                <th>نصيب الفرد الفعلي سابقاً</th>
-                <th>نصيب الفرد بالمحاكي</th>
-                <th>الفائض / العجز المتوقع للأسرة</th>
-              </tr>
-            </thead>
-            <tbody id="simulatorTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- التبويب 3: أداء العائلات وحصة الفرد التفصيلية (مع عمود للفرد تراكمياً القابل للفرز) -->
-      <div id="tab-families" class="tab-section">
-        <div class="panel">
-          <div class="panel-header">
-            <div>
-              <h2>3. الأداء التراكمي وحصة الفرد الفعلية لكل عائلة</h2>
-              <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">💡 اضغط على عنوان أي عمود (مثل: للفرد تراكمياً، حصة الفرد بالدورة، أو الخيمة) للترتيب الفوري، واضغط على أي عائلة لفتح تفاصيل سحوباتها بالأوعية.</p>
-            </div>
-          </div>
-
-          <table>
-            <thead>
-              <tr>
-                <th class="sortable" onclick="sortFamiliesBy('tent')">الخيمة <span id="sort-tent" class="sort-indicator">▲</span></th>
-                <th class="sortable" onclick="sortFamiliesBy('name')">اسم العائلة <span id="sort-name" class="sort-indicator"></span></th>
-                <th class="sortable" onclick="sortFamiliesBy('members')">الأفراد <span id="sort-members" class="sort-indicator"></span></th>
-                <th class="sortable" onclick="sortFamiliesBy('activeCycles')">دورات الحضور <span id="sort-activeCycles" class="sort-indicator"></span></th>
-                <th class="sortable" onclick="sortFamiliesBy('totalLitres')">إجمالي سحب الأسرة <span id="sort-totalLitres" class="sort-indicator"></span></th>
-                <th class="sortable" onclick="sortFamiliesBy('perCapitaCumulative')">للفرد تراكمياً <span id="sort-perCapitaCumulative" class="sort-indicator"></span></th>
-                <th class="sortable" onclick="sortFamiliesBy('activeAvg')">متوسط سحب الأسرة بالدورة <span id="sort-activeAvg" class="sort-indicator"></span></th>
-                <th class="sortable" onclick="sortFamiliesBy('perCapitaActive')">حصة الفرد بالدورة النشطة <span id="sort-perCapitaActive" class="sort-indicator"></span></th>
-                <th class="sortable" onclick="sortFamiliesBy('quotaUtil')">استنفاد الحصة <span id="sort-quotaUtil" class="sort-indicator"></span></th>
-                <th>نمط السحب والأوعية</th>
-              </tr>
-            </thead>
-            <tbody id="familiesTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- التبويب 4: سجل الدورات المؤرشفة -->
-      <div id="tab-cycles" class="tab-section">
-        <div class="panel">
-          <div class="panel-header">
-            <h2>4. سجل الدورات السابقة المؤرشفة (بعد خصم الاحتياطي)</h2>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>تاريخ إغلاق الدورة</th>
-                <th>المدة الفعلية</th>
-                <th>السكان</th>
-                <th>صافي المتاح للتوزيع (والاحتياطي)</th>
-                <th>المستهلك فعلياً</th>
-                <th>نسبة السحب من الصافي</th>
-                <th>نصيب الفرد بالدورة</th>
-                <th>معدل الفرد اليومي</th>
-                <th>نظام التوزيع المطبق</th>
-              </tr>
-            </thead>
-            <tbody id="cyclesTableBody"></tbody>
-          </table>
-        </div>
+    <div class="print-only">
+      <div class="sig-grid">
+        <div>توقيع أمين الصيدلية<br><br>.........................</div>
+        <div>توقيع عضو لجنة الجرد<br><br>.........................</div>
+        <div>اعتماد مدير المركز / الصيدلية<br><br>.........................</div>
       </div>
     </div>
   </div>
 
-  <!-- النافذة السفلية المنبثقة (Bottom Sheet) لتفاصيل سحوبات الأوعية -->
-  <div id="logsModalBackdrop" class="modal-backdrop" onclick="if(event.target===this) closeFamilyModal()">
-    <div class="bottom-sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <div>
-          <h3 id="modalFamilyTitle">سجل سحوبات العائلة</h3>
-          <span id="modalFamilySub" style="font-size:0.82rem; color:var(--text-secondary); font-weight:600;">—</span>
-        </div>
-        <button class="btn-close-sheet" onclick="closeFamilyModal()" title="إغلاق">✕</button>
+  <!-- 5. دليل الأصناف وإعدادات الذكاء الاصطناعي -->
+  <div id="settings" class="panel">
+    <h3>إضافة صنف دوائي جديد إلى دليل الصيدلية</h3>
+    <div class="grid">
+      <div>
+        <label>الاسم التجاري والتركيز</label>
+        <input type="text" id="newItemName" placeholder="مثال: أزيثرومايسين 500 ملغ">
       </div>
-      <div id="modalLogsBody" class="sheet-body"></div>
+      <div>
+        <label>المادة الفعالة والتركيز (للربط بالبدائل)</label>
+        <input type="text" id="newItemActive" placeholder="مثال: Azithromycin 500mg">
+      </div>
+      <div>
+        <label>متوسط الصرف اليومي التقديري</label>
+        <input type="number" id="newItemRate" value="2" min="0.5" step="0.5">
+      </div>
+    </div>
+    <button class="action-btn" onclick="addNewItem()">➕ حفظ الصنف في الدليل</button>
+
+    <hr style="margin:25px 0; border-color:var(--border);">
+
+    <h3>إعدادات الذكاء الاصطناعي (Gemini Vision API) والنسخ الاحتياطي</h3>
+    <div class="grid">
+      <div>
+        <label>مفتاح Gemini API (مجاني من Google AI Studio لقراءة الصور)</label>
+        <input type="password" id="apiKeyInput" placeholder="ألصق مفتاح AIzaSy... هنا" onchange="saveApiKey()">
+      </div>
+      <div>
+        <label>استعادة نسخة احتياطية محفوظة (ملف JSON)</label>
+        <input type="file" accept=".json" onchange="restoreBackup(event)">
+      </div>
+    </div>
+    <div class="toolbar" style="margin-top:10px;">
+      <button class="action-btn" onclick="saveApiKey()">حفظ مفتاح الـ API الآن</button>
+      <button class="secondary-btn" onclick="resetDemoData()">إعادة ضبط البيانات الافتراضية</button>
     </div>
   </div>
+</div>
 
-  <script>
-    const PIN_SHA256_HASH = "f8c367c6b9a43f91b42696b3859d7a368b1185966a35e30d897476d18a916327";
-    const FIREBASE_HISTORY_URL = "https://camp-water-default-rtdb.europe-west1.firebasedatabase.app/camp_history.json";
-    const CACHE_KEY = "camp_analytics_history_cache_v3";
-    const CACHE_TIME_KEY = "camp_analytics_last_sync_v3";
-    const SESSION_UNLOCK_KEY = "camp_analytics_unlocked_v3";
-    const THEME_STORAGE_KEY = "camp_analytics_theme_pref";
+<script>
+// دوال التبديل بين التبويبات في بداية الكود لتعمل فوراً دون تأثر
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const target = document.getElementById(tabId);
+  if (target) target.classList.add('active');
+  if (btn) btn.classList.add('active');
+}
 
-    let rawHistoryData = {};
-    let processedState = null;
-    let elasticityChartInstance = null;
-    let currentEmpiricalAlpha = 0.58;
-    let excludedFamilyKeys = new Set();
-    let currentTab = 'tab-calibration';
-    let familySortState = { field: 'tent', asc: true };
-    let modalOpenState = false;
-
-    /* ==================== 1. نظام الهوية اللونية المزدوج والتلقائي ==================== */
-    function getSavedThemePref() {
-      return localStorage.getItem(THEME_STORAGE_KEY) || 'auto';
+// نظام تخزين ذكي يتجاوز قيود أمان الهاتف عند فتح الملف عبر رابط content://
+const memoryStore = {};
+const safeStorage = {
+  getItem: function(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      return memoryStore[key] || null;
     }
-
-    function applyTheme(pref) {
-      const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const effectiveTheme = pref === 'auto' ? (systemDark ? 'dark' : 'light') : pref;
-
-      if (effectiveTheme === 'light') {
-        document.documentElement.setAttribute('data-theme', 'light');
-      } else {
-        document.documentElement.removeAttribute('data-theme');
-      }
-
-      const btn = document.getElementById('themeToggleBtn');
-      if (btn) {
-        if (pref === 'auto') btn.innerHTML = '🌗 تلقائي';
-        else if (pref === 'dark') btn.innerHTML = '🌙 داكن';
-        else btn.innerHTML = '☀️ نهاري';
-      }
-
-      if (processedState) updateSimulator();
+  },
+  setItem: function(key, val) {
+    try {
+      localStorage.setItem(key, val);
+    } catch (e) {
+      memoryStore[key] = val;
     }
+  }
+};
 
-    function cycleThemeMode() {
-      const current = getSavedThemePref();
-      const next = current === 'auto' ? 'light' : (current === 'light' ? 'dark' : 'auto');
-      localStorage.setItem(THEME_STORAGE_KEY, next);
-      applyTheme(next);
+const todayStr = new Date().toISOString().split('T')[0];
+
+const defaultData = {
+  items: [
+    { id: '1', name: 'أموكسيسيلين 500 ملغ (Amoxicillin 500)', active: 'Amoxicillin 500mg', dailyRate: 3 },
+    { id: '2', name: 'أموكلان 500 ملغ - بديل (Amoclan 500)', active: 'Amoxicillin 500mg', dailyRate: 2 },
+    { id: '3', name: 'باراسيتامول 500 ملغ (Paracetamol 500)', active: 'Paracetamol 500mg', dailyRate: 8 },
+    { id: '4', name: 'أوميبرازول 20 ملغ (Omeprazole 20)', active: 'Omeprazole 20mg', dailyRate: 1 }
+  ],
+  batches: [
+    { batchId: 'B1', itemId: '1', batchNo: 'AMX-101', initial: 100, remaining: 2, expiry: '2026-12-01', supplier: 'مستودع الشفاء', recDate: '2026-09-01' },
+    { batchId: 'B2', itemId: '1', batchNo: 'AMX-205', initial: 80, remaining: 80, expiry: '2027-08-15', supplier: 'مستودع الشفاء', recDate: '2026-10-10' },
+    { batchId: 'B3', itemId: '2', batchNo: 'AMC-99', initial: 60, remaining: 60, expiry: '2027-05-20', supplier: 'الشركة المتحدة', recDate: '2026-10-01' },
+    { batchId: 'B4', itemId: '3', batchNo: 'PAR-400', initial: 200, remaining: 140, expiry: '2026-11-25', supplier: 'مستودع الأمل', recDate: '2026-08-15' },
+    { batchId: 'B5', itemId: '4', batchNo: 'OMP-09', initial: 40, remaining: 15, expiry: '2026-10-01', supplier: 'مستودع الشفاء', recDate: '2025-10-01' }
+  ],
+  dispensings: [
+    { date: todayStr, beneficiary: 'أحمد محمود', benId: '90123', itemId: '3', itemName: 'باراسيتامول 500 ملغ (Paracetamol 500)', qty: 2, batchNo: 'PAR-400', expiry: '2026-11-25' }
+  ],
+  destructions: []
+};
+
+let db;
+try {
+  const saved = safeStorage.getItem('SmartPharmProDB');
+  db = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultData));
+} catch(e) {
+  db = JSON.parse(JSON.stringify(defaultData));
+}
+
+function saveDB() {
+  safeStorage.setItem('SmartPharmProDB', JSON.stringify(db));
+  renderAll();
+}
+
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  safeStorage.setItem('GeminiAPIKey', key);
+  alert('تم حفظ مفتاح الذكاء الاصطناعي بنجاح.');
+}
+
+function resetDemoData() {
+  if (confirm('هل أنت متأكد من إعادة ضبط البيانات التجريبية؟')) {
+    db = JSON.parse(JSON.stringify(defaultData));
+    saveDB();
+  }
+}
+
+function addNewItem() {
+  const name = document.getElementById('newItemName').value.trim();
+  const active = document.getElementById('newItemActive').value.trim();
+  const dailyRate = Number(document.getElementById('newItemRate').value) || 1;
+  if (!name || !active) { alert('يرجى إدخال اسم الصنف والمادة الفعالة.'); return; }
+  db.items.push({ id: 'ITM-' + Date.now(), name, active, dailyRate });
+  document.getElementById('newItemName').value = '';
+  document.getElementById('newItemActive').value = '';
+  saveDB();
+  alert('تمت إضافة الصنف إلى الدليل بنجاح.');
+}
+
+function checkRepeatDispense() {
+  const benName = document.getElementById('dispBeneficiary').value.trim();
+  const benId = document.getElementById('dispBenId').value.trim();
+  const repeatBox = document.getElementById('repeatAlert');
+
+  if (!benName && !benId) { repeatBox.style.display = 'none'; return; }
+
+  const prev = db.dispensings.find(d =>
+    (benId && d.benId === benId && d.benId !== '-') ||
+    (benName && d.beneficiary === benName)
+  );
+
+  if (prev) {
+    repeatBox.innerHTML = `🔔 <strong>تنبيه تكرار صرف:</strong> هذا المستفيد استلم سابقاً صنف (${prev.itemName}) بكمية (${prev.qty}) بتاريخ ${prev.date}.`;
+    repeatBox.style.display = 'block';
+  } else {
+    repeatBox.style.display = 'none';
+  }
+}
+
+function handleSmartSearch() {
+  const q = document.getElementById('smartSearch').value.trim();
+  const sugBox = document.getElementById('searchSuggestions');
+  if (!q) { sugBox.innerHTML = ''; return; }
+  const pattern = q.replace(/\.\./g, '.*').replace(/\s+/g, '.*');
+  const regex = new RegExp(pattern, 'i');
+  const matches = db.items.filter(i => regex.test(i.name) || regex.test(i.active));
+  if (matches.length > 0) {
+    sugBox.innerHTML = 'الأصناف المطابقة: ' + matches.map(m =>
+      `<button class="secondary-btn" style="margin:2px;" onclick="selectItem('${m.id}')">${m.name}</button>`
+    ).join(' ');
+  } else {
+    sugBox.innerHTML = '<span style="color:var(--danger)">لا يوجد صنف مطابق لهذا النمط.</span>';
+  }
+}
+
+function selectItem(id) {
+  document.getElementById('dispItem').value = id;
+  checkItemAvailability();
+  checkRepeatDispense();
+}
+
+function startVoiceInput() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) { alert('متصفحك لا يدعم الإدخال الصوتي، يرجى استخدام متصفح Chrome.'); return; }
+  const rec = new SpeechRec();
+  rec.lang = 'ar-SA';
+  rec.onresult = (e) => {
+    document.getElementById('smartSearch').value = e.results[0][0].transcript;
+    handleSmartSearch();
+  };
+  rec.start();
+}
+
+async function callGeminiVision(file, promptText) {
+  const apiKey = safeStorage.getItem('GeminiAPIKey');
+  if (!apiKey) {
+    alert('لتشغيل قراءة الكاميرا الفعلية، ضع مفتاح Gemini API المجاني في تبويب (5. دليل الأصناف والـ AI). سيتم الآن تشغيل محاكاة ذكية للتجربة.');
+    return null;
+  }
+  const base64 = await new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(',')[1]);
+    reader.readAsDataURL(file);
+  });
+
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
+          { text: promptText },
+          { inlineData: { mimeType: file.type, data: base64 } }
+        ]
+      }]
+    })
+  });
+  const data = await response.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
+async function analyzePrescriptionImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const inventoryNames = db.items.map(i => `${i.id}: ${i.name} (${i.active})`).join(' | ');
+  const prompt = `أنت مساعد صيدلي ذكي. اقرأ هذه الوصفة الطبية المكتوبة بخط اليد وطابقها مع أقرب 3 أصناف من مخزون الصيدلية التالي فقط: [${inventoryNames}]. أرجع النتيجة بصيغة JSON فقط يحتوي على مصفوفة matches بها id الصنف ونسبة الثقة.`;
+
+  const res = await callGeminiVision(file, prompt);
+  if (!res) {
+    document.getElementById('searchSuggestions').innerHTML =
+      `🤖 <strong>تحليل الذكاء الاصطناعي للخط اليدوي (أعلى 3 احتمالات من مخزونك):</strong> ` +
+      db.items.slice(0, 3).map(m => `<button class="secondary-btn" style="margin:2px;" onclick="selectItem('${m.id}')">${m.name}</button>`).join(' ');
+    return;
+  }
+  try {
+    const cleanJson = res.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(cleanJson);
+    if (parsed.matches) {
+      document.getElementById('searchSuggestions').innerHTML =
+        `🤖 <strong>نتائج قراءة الوصفة بالذكاء الاصطناعي:</strong> ` +
+        parsed.matches.map(m => {
+          const item = db.items.find(i => i.id === String(m.id));
+          return item ? `<button class="secondary-btn" style="margin:2px;" onclick="selectItem('${item.id}')">${item.name}</button>` : '';
+        }).join(' ');
     }
+  } catch (e) {
+    document.getElementById('smartSearch').value = res;
+    handleSmartSearch();
+  }
+}
 
-    if (window.matchMedia) {
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-        if (getSavedThemePref() === 'auto') applyTheme('auto');
-      });
+async function analyzeInvoiceImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const prompt = `استخرج بيانات فاتورة الأدوية أو علبة الدواء من الصورة بصيغة JSON فقط بالحقول التالية: {"qty": number, "batch": "string", "expiry": "YYYY-MM-DD", "supplier": "string"}`;
+  const res = await callGeminiVision(file, prompt);
+  if (!res) {
+    document.getElementById('recQty').value = 100;
+    document.getElementById('recBatch').value = 'AI-BATCH-90';
+    document.getElementById('recExpiry').value = '2027-12-31';
+    document.getElementById('recSupplier').value = 'توريد آلي عبر الكاميرا';
+    return;
+  }
+  try {
+    const parsed = JSON.parse(res.replace(/```json|```/g, '').trim());
+    if (parsed.qty) document.getElementById('recQty').value = parsed.qty;
+    if (parsed.batch) document.getElementById('recBatch').value = parsed.batch;
+    if (parsed.expiry) document.getElementById('recExpiry').value = parsed.expiry;
+    if (parsed.supplier) document.getElementById('recSupplier').value = parsed.supplier;
+  } catch (e) {
+    alert('تمت قراءة النص: ' + res);
+  }
+}
+
+function checkItemAvailability() {
+  const itemId = document.getElementById('dispItem').value;
+  const reqQty = Number(document.getElementById('dispQty').value) || 0;
+  const alertBox = document.getElementById('dispAlert');
+  const item = db.items.find(i => i.id === itemId);
+  if (!item) return;
+
+  const validBatches = db.batches
+    .filter(b => b.itemId === itemId && b.remaining > 0 && b.expiry > todayStr)
+    .sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
+
+  const avail = validBatches.reduce((s, b) => s + b.remaining, 0);
+
+  if (avail < reqQty) {
+    const alts = db.items.filter(i => i.id !== itemId && i.active === item.active);
+    let msg = `⚠️ الرصيد الصالح المتاح (${avail}) لا يكفي الكمية المطلوبة (${reqQty}). `;
+    if (alts.length > 0) {
+      msg += `<strong>البديل المتوفر بنفس المادة الفعالة (${item.active}):</strong> ` +
+        alts.map(a => `<button class="secondary-btn" onclick="selectItem('${a.id}')">استبدال بـ ${a.name}</button>`).join(' ');
     }
+    alertBox.innerHTML = msg;
+    alertBox.style.display = 'block';
+  } else if (validBatches.length > 0) {
+    alertBox.innerHTML = `✅ سيتم الخصم تلقائياً من التشغيلة الأقرب انتهاءً: <strong>${validBatches[0].batchNo}</strong> (تنتهي في ${validBatches[0].expiry} - متاح ${validBatches[0].remaining}).`;
+    alertBox.style.display = 'block';
+  }
+}
 
-    /* ==================== 2. الأمان والتحقق برمز PIN ==================== */
-    async function hashPin(pin) {
-      if (window.crypto && window.crypto.subtle) {
-        try {
-          const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pin));
-          return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
-        } catch (e) {}
-      }
-      return pin === "399411" ? PIN_SHA256_HASH : "";
+function submitDispense() {
+  const beneficiary = document.getElementById('dispBeneficiary').value.trim() || 'مستفيد عام';
+  const benId = document.getElementById('dispBenId').value.trim() || '-';
+  const date = document.getElementById('dispDate').value || todayStr;
+  const itemId = document.getElementById('dispItem').value;
+  let qty = Number(document.getElementById('dispQty').value);
+  const item = db.items.find(i => i.id === itemId);
+
+  const validBatches = db.batches
+    .filter(b => b.itemId === itemId && b.remaining > 0 && b.expiry > todayStr)
+    .sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
+
+  const avail = validBatches.reduce((s, b) => s + b.remaining, 0);
+  if (avail < qty) { alert('الرصيد الصالح غير كافٍ للصرف!'); return; }
+
+  for (const b of validBatches) {
+    if (qty === 0) break;
+    const take = Math.min(b.remaining, qty);
+    b.remaining -= take;
+    qty -= take;
+    db.dispensings.unshift({ date, beneficiary, benId, itemId: item.id, itemName: item.name, qty: take, batchNo: b.batchNo, expiry: b.expiry });
+  }
+  saveDB();
+}
+
+function submitReceive() {
+  const itemId = document.getElementById('recItem').value;
+  const qty = Number(document.getElementById('recQty').value);
+  const batchNo = document.getElementById('recBatch').value.trim() || ('BAT-' + Math.floor(Math.random()*900));
+  const expiry = document.getElementById('recExpiry').value;
+  const recDate = document.getElementById('recDate').value || todayStr;
+  const supplier = document.getElementById('recSupplier').value.trim() || 'مورد عام';
+
+  if (!expiry || qty <= 0) { alert('يرجى تحديد تاريخ انتهاء الصلاحية والكمية.'); return; }
+
+  db.batches.unshift({
+    batchId: 'B' + Date.now(),
+    itemId, batchNo, initial: qty, remaining: qty, expiry, supplier, recDate
+  });
+  saveDB();
+  alert('تم استلام الصنف وإضافة التشغيلة بنجاح.');
+}
+
+function submitDestruction() {
+  const batchId = document.getElementById('destBatch').value;
+  const qty = Number(document.getElementById('destQty').value);
+  const reason = document.getElementById('destReason').value;
+  const committee = document.getElementById('destCommittee').value.trim() || 'لجنة الجرد الدائمة';
+
+  const batch = db.batches.find(b => b.batchId === batchId);
+  if (!batch || batch.remaining < qty) { alert('الكمية المحددة غير متوفرة في هذه التشغيلة.'); return; }
+
+  const item = db.items.find(i => i.id === batch.itemId);
+  batch.remaining -= qty;
+  db.destructions.unshift({
+    date: todayStr,
+    itemName: item ? item.name : '',
+    batchNo: batch.batchNo,
+    expiry: batch.expiry,
+    qty,
+    info: `${reason} - اللجنة: ${committee}`
+  });
+  saveDB();
+}
+
+function calcVariance(inputEl, bookBalance) {
+  const actual = Number(inputEl.value) || 0;
+  const diff = actual - bookBalance;
+  const span = inputEl.parentElement.nextElementSibling;
+  if (diff === 0) {
+    span.innerHTML = '<span class="badge badge-ok">مطابق (0)</span>';
+  } else if (diff < 0) {
+    span.innerHTML = `<span class="badge badge-err">عجز (${diff})</span>`;
+  } else {
+    span.innerHTML = `<span class="badge badge-warn">زيادة (+${diff})</span>`;
+  }
+}
+
+function exportInventoryCSV() {
+  let csv = '\uFEFFالصنف,المادة الفعالة,إجمالي الوارد,إجمالي الصادر,الرصيد الصالح المتبقي\n';
+  db.items.forEach(item => {
+    const itemBatches = db.batches.filter(b => b.itemId === item.id);
+    const totalIn = itemBatches.reduce((s, b) => s + b.initial, 0);
+    const totalRem = itemBatches.reduce((s, b) => s + b.remaining, 0);
+    const validRem = itemBatches.filter(b => b.expiry > todayStr).reduce((s, b) => s + b.remaining, 0);
+    const totalOut = totalIn - totalRem;
+    csv += `"${item.name}","${item.active}",${totalIn},${totalOut},${validRem}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `جرد_الصيدلية_${todayStr}.csv`;
+  link.click();
+}
+
+function downloadBackup() {
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `نسخة_احتياطية_للصيدلية_${todayStr}.json`;
+  link.click();
+}
+
+function restoreBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      db = JSON.parse(e.target.result);
+      saveDB();
+      alert('تمت استعادة النسخة الاحتياطية بنجاح!');
+    } catch (err) {
+      alert('ملف النسخة الاحتياطية غير صالح.');
     }
+  };
+  reader.readAsText(file);
+}
 
-    async function checkUnlock() {
-      const pin = document.getElementById('pinInput').value.trim();
-      const hashed = await hashPin(pin);
-      if (hashed === PIN_SHA256_HASH || pin === "399411") {
-        sessionStorage.setItem(SESSION_UNLOCK_KEY, "1");
-        document.getElementById('lockScreen').style.display = 'none';
-        document.getElementById('mainContainer').style.display = 'block';
-        initDashboard();
-      } else {
-        document.getElementById('lockError').style.display = 'block';
-      }
-    }
+function renderAll() {
+  const itemOpts = db.items.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+  const dispItemEl = document.getElementById('dispItem');
+  const recItemEl = document.getElementById('recItem');
+  if (dispItemEl) dispItemEl.innerHTML = itemOpts;
+  if (recItemEl) recItemEl.innerHTML = itemOpts;
 
-    function lockDashboard() {
-      sessionStorage.removeItem(SESSION_UNLOCK_KEY);
-      document.getElementById('pinInput').value = '';
-      document.getElementById('lockError').style.display = 'none';
-      document.getElementById('lockScreen').style.display = 'flex';
-      document.getElementById('mainContainer').style.display = 'none';
-    }
+  const dispBody = document.getElementById('dispenseTableBody');
+  if (dispBody) {
+    dispBody.innerHTML = db.dispensings.map(d => `
+      <tr>
+        <td>${d.date}</td>
+        <td>${d.beneficiary} (${d.benId})</td>
+        <td>${d.itemName}</td>
+        <td><strong>${d.qty}</strong></td>
+        <td>${d.batchNo}</td>
+        <td>${d.expiry}</td>
+      </tr>
+    `).join('');
+  }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      applyTheme(getSavedThemePref());
-      if (sessionStorage.getItem(SESSION_UNLOCK_KEY) === "1") {
-        document.getElementById('lockScreen').style.display = 'none';
-        document.getElementById('mainContainer').style.display = 'block';
-        initDashboard();
-      }
-    });
+  const recBody = document.getElementById('receiveTableBody');
+  if (recBody) {
+    recBody.innerHTML = db.batches.map(b => {
+      const item = db.items.find(i => i.id === b.itemId);
+      return `<tr>
+        <td>${b.recDate}</td>
+        <td>${item ? item.name : ''}</td>
+        <td>${b.initial}</td>
+        <td>${b.batchNo}</td>
+        <td>${b.expiry}</td>
+        <td>${b.supplier}</td>
+      </tr>`;
+    }).join('');
+  }
 
-    /* ==================== 3. التبويبات الذكية ==================== */
-    function switchTab(tabId) {
-      currentTab = tabId;
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
-      });
-      document.querySelectorAll('.tab-section').forEach(sec => {
-        if (tabId === 'ALL') {
-          sec.classList.add('active');
-        } else {
-          sec.classList.toggle('active', sec.id === tabId);
+  const invBody = document.getElementById('inventoryTableBody');
+  if (invBody) {
+    invBody.innerHTML = db.items.map(item => {
+      const itemBatches = db.batches.filter(b => b.itemId === item.id);
+      const totalIn = itemBatches.reduce((s, b) => s + b.initial, 0);
+      const totalRem = itemBatches.reduce((s, b) => s + b.remaining, 0);
+      const validRem = itemBatches.filter(b => b.expiry > todayStr).reduce((s, b) => s + b.remaining, 0);
+      const totalOut = totalIn - totalRem;
+
+      const batchAnalysis = itemBatches.filter(b => b.remaining > 0).map(b => {
+        const daysLeft = Math.ceil((new Date(b.expiry) - new Date(todayStr)) / (1000*60*60*24));
+        if (daysLeft <= 0) {
+          return `<span class="badge badge-err">تشغيلة ${b.batchNo}: منتهية (${b.remaining}) - محجوبة</span>`;
         }
-      });
-      if (tabId === 'tab-calibration' || tabId === 'ALL') {
-        setTimeout(() => { if (elasticityChartInstance) elasticityChartInstance.resize(); }, 50);
-      }
-    }
-
-    /* ==================== 4. جلب البيانات والتخزين المحلي ==================== */
-    function initDashboard() {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached) {
-        try {
-          rawHistoryData = JSON.parse(cached);
-          populateCycleSelector(rawHistoryData);
-          reprocessCurrentData();
-          document.getElementById('loading').style.display = 'none';
-          document.getElementById('dashboardContent').style.display = 'block';
-          updateSyncBanner(false, localStorage.getItem(CACHE_TIME_KEY));
-        } catch (e) {}
-      }
-      fetchHistoryData();
-    }
-
-    function updateSyncBanner(isOnline, timestampStr) {
-      const dot = document.getElementById('syncDot');
-      const txt = document.getElementById('syncText');
-      if (isOnline) {
-        dot.className = 'status-dot';
-        txt.textContent = `متصل بالسحابة — آخر مزامنة: ${timestampStr}`;
-      } else {
-        dot.className = 'status-dot offline';
-        txt.textContent = `وضع الذاكرة المحلية (Offline) — آخر مزامنة محفوظة: ${timestampStr || 'غير معروف'}`;
-      }
-    }
-
-    async function fetchHistoryData() {
-      if (Object.keys(rawHistoryData).length === 0) {
-        document.getElementById('loading').style.display = 'block';
-        document.getElementById('dashboardContent').style.display = 'none';
-      }
-
-      try {
-        const resp = await fetch(FIREBASE_HISTORY_URL, { cache: "no-store" });
-        const data = await resp.json();
-        
-        if (!data || Object.keys(data).length === 0) {
-          document.getElementById('loading').textContent = 'لا توجد بيانات تاريخية مؤرشفة بعد في camp_history.';
-          return;
+        const expectedUse = item.dailyRate * daysLeft;
+        const riskQty = Math.max(0, Math.round(b.remaining - expectedUse));
+        if (riskQty > 0) {
+          return `<span class="badge badge-warn">تشغيلة ${b.batchNo} (${b.remaining}): خطر تلف ${riskQty} قبل ${b.expiry}</span>`;
         }
-
-        rawHistoryData = data;
-        const nowStr = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-        localStorage.setItem(CACHE_TIME_KEY, nowStr);
-
-        populateCycleSelector(data);
-        updateSyncBanner(true, nowStr);
-        reprocessCurrentData();
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('dashboardContent').style.display = 'block';
-      } catch (err) {
-        updateSyncBanner(false, localStorage.getItem(CACHE_TIME_KEY));
-        if (Object.keys(rawHistoryData).length === 0) {
-          document.getElementById('loading').textContent = 'تعذر الاتصال بقاعدة البيانات ولا توجد نسخة محفوظة محلياً.';
-        }
-      }
-    }
-
-    function populateCycleSelector(data) {
-      const select = document.getElementById('cycleFilterSelect');
-      const prevVal = select.value || 'ALL';
-      select.innerHTML = '<option value="ALL">📚 كل الدورات المؤرشفة (تراكمي)</option>';
-
-      const keys = Object.keys(data).sort((a, b) => (data[a].cycleTimestamp || 0) - (data[b].cycleTimestamp || 0));
-      keys.forEach((k, idx) => {
-        const dateStr = data[k].closedAtStr || `دورة ${idx + 1}`;
-        const opt = document.createElement('option');
-        opt.value = k;
-        opt.textContent = `🗓️ دورة ${idx + 1}: ${dateStr}`;
-        select.appendChild(opt);
-      });
-
-      if ([...select.options].some(o => o.value === prevVal)) {
-        select.value = prevVal;
-      }
-    }
-
-    function reprocessCurrentData() {
-      if (!rawHistoryData || Object.keys(rawHistoryData).length === 0) return;
-      processAndRenderAnalytics(rawHistoryData);
-    }
-
-    /* ==================== 5. المعالجة الإحصائية وحساب الحصص ==================== */
-    function computeCycleAllocatedShare(famMembers, allFams, netWater, settings) {
-      if (netWater <= 0 || !allFams.length) return 0;
-      const mode = (settings && settings.distMode) || 'per_family';
-      const alpha = parseFloat(settings && settings.alpha) || 0.58;
-
-      if (mode === 'per_family') return netWater / allFams.length;
-      if (mode === 'per_capita') {
-        const totalPop = allFams.reduce((acc, f) => acc + (parseInt(f.members) || 0), 0);
-        return totalPop > 0 ? (netWater * (famMembers / totalPop)) : 0;
-      }
-      const totalWeights = allFams.reduce((acc, f) => acc + Math.pow(parseInt(f.members) || 0, alpha), 0);
-      return totalWeights > 0 ? (netWater * (Math.pow(famMembers, alpha) / totalWeights)) : 0;
-    }
-
-    function processAndRenderAnalytics(data) {
-      const selectedCycleKey = document.getElementById('cycleFilterSelect').value;
-      const allKeysSorted = Object.keys(data).sort((a, b) => (data[a].cycleTimestamp || 0) - (data[b].cycleTimestamp || 0));
-      const activeCycleKeys = selectedCycleKey === 'ALL' ? allKeysSorted : [selectedCycleKey];
-      const totalCycles = activeCycleKeys.length;
-      const filterMarginal = document.getElementById('filterOutliersToggle').checked;
-
-      let grandTotalConsumed = 0;
-      let grandTotalNetWater = 0;
-      let totalPopRecorded = 0;
-      let totalDurationDays = 0;
-      let excludedRecordsCount = 0;
-
-      const sizeMap = {};
-      const familyMap = {};
-      const cyclesList = [];
-      const regressionPairs = [];
-
-      activeCycleKeys.forEach((key, cIdx) => {
-        const cycle = data[key];
-        if (!cycle) return;
-        const summary = cycle.summary || {};
-        const settings = cycle.settings || {};
-        const cycleConsumed = parseFloat(summary.totalConsumed) || 0;
-        const cyclePop = parseInt(summary.totalPop) || 0;
-        const totalW = parseFloat(summary.totalWater || settings.totalWater) || 0;
-        const resW = parseFloat(summary.reserveLiters !== undefined ? summary.reserveLiters : settings.reserveLiters) || 0;
-        const netW = Math.max(0, totalW - resW);
-
-        grandTotalConsumed += cycleConsumed;
-        grandTotalNetWater += netW;
-        totalPopRecorded += cyclePop;
-
-        const fams = cycle.families || [];
-
-        let minLogTime = Infinity;
-        let maxLogTime = 0;
-        fams.forEach(f => {
-          (f.logs || []).forEach(l => {
-            const t = parseInt(l.timestamp || l.id) || 0;
-            if (t > 0) {
-              if (t < minLogTime) minLogTime = t;
-              if (t > maxLogTime) maxLogTime = t;
-            }
-          });
-        });
-
-        const closeTime = parseInt(cycle.cycleTimestamp) || maxLogTime;
-        let durationHours = 48;
-        if (minLogTime < Infinity && closeTime > minLogTime) {
-          durationHours = Math.max(6, (closeTime - minLogTime) / (1000 * 60 * 60));
-        }
-        const durationDays = durationHours / 24;
-        totalDurationDays += durationDays;
-
-        cyclesList.push({
-          key: key,
-          cycleIndex: allKeysSorted.indexOf(key) + 1,
-          date: cycle.closedAtStr || `دورة ${cIdx + 1}`,
-          timestamp: closeTime,
-          durationDays: durationDays,
-          durationHours: durationHours,
-          pop: cyclePop,
-          totalWater: totalW,
-          reserveWater: resW,
-          netWater: netW,
-          consumed: cycleConsumed,
-          mode: settings.distMode || 'elasticity'
-        });
-
-        fams.forEach((f, idx) => {
-          const famKey = String(f.id !== undefined ? f.id : (idx + 1));
-          const m = parseInt(f.members) || 0;
-          const c = parseFloat(f.consumed) || 0;
-          const tent = f.tent || famKey;
-          const logs = f.logs || [];
-
-          const allocatedShare = computeCycleAllocatedShare(m, fams, netW, settings);
-          const perCapitaInCycle = m > 0 ? (c / m) : 0;
-
-          const isManuallyExcluded = excludedFamilyKeys.has(famKey);
-          const isZero = c <= 0;
-          const isMarginal = filterMarginal && (perCapitaInCycle < 10);
-
-          if (m > 0 && !isZero && !isMarginal && !isManuallyExcluded) {
-            if (!sizeMap[m]) sizeMap[m] = { totalLitres: 0, occurrences: 0 };
-            sizeMap[m].totalLitres += c;
-            sizeMap[m].occurrences += 1;
-            regressionPairs.push({ n: m, c: c, famKey: famKey });
-          } else if (m > 0) {
-            excludedRecordsCount += 1;
-          }
-
-          if (!familyMap[famKey]) {
-            familyMap[famKey] = {
-              key: famKey,
-              id: f.id || (idx + 1),
-              tent: tent,
-              name: f.name,
-              members: m,
-              totalLitres: 0,
-              totalCyclesCount: 0,
-              activeCyclesCount: 0,
-              validCyclesLitres: 0,
-              validCyclesCount: 0,
-              totalAllocatedInActive: 0,
-              totalPullsCount: 0,
-              activeDurationDays: 0,
-              cycleHistory: []
-            };
-          }
-
-          const fm = familyMap[famKey];
-          fm.name = f.name || fm.name;
-          fm.members = m || fm.members;
-          if (f.tent) fm.tent = f.tent;
-          fm.totalLitres += c;
-          fm.totalCyclesCount += 1;
-          fm.totalPullsCount += logs.length;
-
-          fm.cycleHistory.push({
-            cycleTitle: cycle.closedAtStr || `دورة ${cIdx + 1}`,
-            consumed: c,
-            allocated: Math.round(allocatedShare),
-            logs: logs
-          });
-
-          if (c > 0) {
-            fm.activeCyclesCount += 1;
-            fm.totalAllocatedInActive += allocatedShare;
-            fm.activeDurationDays += durationDays;
-          }
-          if (!isZero && !isMarginal) {
-            fm.validCyclesLitres += c;
-            fm.validCyclesCount += 1;
-          }
-        });
-      });
-
-      document.getElementById('excludedCountBadge').textContent = `المستبعد من الانحدار: ${excludedRecordsCount} سجل`;
-
-      // تحديث كروت المؤشرات العلوية
-      const avgDurationDays = totalCycles > 0 ? (totalDurationDays / totalCycles) : 1;
-      const avgPop = totalCycles > 0 ? (totalPopRecorded / totalCycles) : 1;
-      const avgPerCapitaCycle = (avgPop > 0 && totalCycles > 0) ? (grandTotalConsumed / totalCycles) / avgPop : 0;
-      const cumulativePerCapita = avgPop > 0 ? (grandTotalConsumed / avgPop) : 0;
-      const dailyPerCapita = avgDurationDays > 0 ? (avgPerCapitaCycle / avgDurationDays) : 0;
-
-      document.getElementById('kpiLabelCycles').textContent = selectedCycleKey === 'ALL' ? 'إجمالي الدورات المؤرشفة' : 'الدورة المحددة حالياً';
-      document.getElementById('metricCycles').textContent = selectedCycleKey === 'ALL' ? totalCycles : 'دورة واحدة';
-      document.getElementById('metricAvgDuration').textContent = `متوسط المدة: ${avgDurationDays.toFixed(1)} يوم (${Math.round(avgDurationDays * 24)} س)`;
-      document.getElementById('metricTotalConsumed').textContent = Math.round(grandTotalConsumed) + ' لتر';
-      document.getElementById('metricNetRatio').textContent = `بنسبة ${grandTotalNetWater > 0 ? ((grandTotalConsumed / grandTotalNetWater) * 100).toFixed(1) : 0}% من الصافي (${grandTotalNetWater} لتر)`;
-      document.getElementById('metricAvgCycle').textContent = Math.round(grandTotalConsumed / totalCycles) + ' لتر';
-      document.getElementById('metricPerCapita').textContent = avgPerCapitaCycle.toFixed(1) + ' لتر/دورة';
-      document.getElementById('metricCumulativePerCapitaSub').textContent = `التراكمي للفرد: ${cumulativePerCapita.toFixed(1)} لتر`;
-      document.getElementById('metricDailyPerCapita').textContent = dailyPerCapita.toFixed(1) + ' لتر/يوم';
-
-      processedState = { sizeMap, familyMap, cyclesList, regressionPairs };
-
-      renderFamilyFilterChips(familyMap);
-      calculateEmpiricalAlpha(regressionPairs);
-      updateSimulator();
-      renderCyclesTable(cyclesList);
-      renderFamiliesTable();
-    }
-
-    /* ==================== 6. كبسولات فلترة العائلات ومعايرة ألفا ==================== */
-    function renderFamilyFilterChips(familyMap) {
-      const container = document.getElementById('familyChipsContainer');
-      container.innerHTML = '';
-      const famList = Object.values(familyMap).sort((a, b) => (parseInt(a.tent) || a.id) - (parseInt(b.tent) || b.id));
-
-      famList.forEach(f => {
-        const isExcluded = excludedFamilyKeys.has(f.key);
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = `fam-chip ${isExcluded ? 'excluded' : ''}`;
-        btn.innerHTML = `<span>${isExcluded ? '✕' : '✓'}</span> <span>خيمة ${f.tent}: ${f.name} (${f.members})</span>`;
-        btn.onclick = () => {
-          if (excludedFamilyKeys.has(f.key)) excludedFamilyKeys.delete(f.key);
-          else excludedFamilyKeys.add(f.key);
-          reprocessCurrentData();
-        };
-        container.appendChild(btn);
-      });
-    }
-
-    function resetExcludedFamilies() {
-      excludedFamilyKeys.clear();
-      reprocessCurrentData();
-    }
-
-    function calculateEmpiricalAlpha(pairs) {
-      if (pairs.length < 3) {
-        document.getElementById('empiricalAlpha').textContent = 'غير كافٍ';
-        document.getElementById('rSquaredVal').textContent = '—';
-        document.getElementById('baseKVal').textContent = '—';
-        document.getElementById('alphaEvaluation').textContent = 'عدد السجلات المفعلة أقل من الحد الأدنى المطلوب لحساب انحدار إحصائي.';
-        return;
-      }
-
-      let sumX = 0, sumY = 0;
-      const lnData = pairs.map(p => {
-        const x = Math.log(p.n);
-        const y = Math.log(p.c);
-        sumX += x;
-        sumY += y;
-        return { x, y };
-      });
-
-      const n = lnData.length;
-      const meanX = sumX / n;
-      const meanY = sumY / n;
-
-      let ssXY = 0, ssXX = 0, ssYY = 0;
-      lnData.forEach(p => {
-        const dx = p.x - meanX;
-        const dy = p.y - meanY;
-        ssXY += dx * dy;
-        ssXX += dx * dx;
-        ssYY += dy * dy;
-      });
-
-      if (ssXX === 0) return;
-
-      const alpha = ssXY / ssXX;
-      const lnK = meanY - alpha * meanX;
-      const kVal = Math.exp(lnK);
-      const rSquared = ssYY > 0 ? Math.pow(ssXY, 2) / (ssXX * ssYY) : 0;
-
-      currentEmpiricalAlpha = Math.max(0, Math.min(1, alpha));
-
-      document.getElementById('empiricalAlpha').textContent = `α = ${alpha.toFixed(2)}`;
-      document.getElementById('rSquaredVal').textContent = `${(rSquared * 100).toFixed(1)}%`;
-      document.getElementById('baseKVal').textContent = `${kVal.toFixed(1)} لتر`;
-
-      let diagText = '';
-      if (alpha < 0.35) {
-        diagText = `المعامل الفعلي منخفض (${alpha.toFixed(2)})؛ يعكس تأثير نظام التوزيع بالتساوي للعائلات ووجود عائلات كبيرة ذات سحب منخفض.`;
-      } else if (alpha >= 0.35 && alpha <= 0.72) {
-        diagText = `المعامل الفعلي (${alpha.toFixed(2)}) يقع ضمن النطاق المثالي لوفورات الحجم ويتقارب مع الفرضية المرجعية (0.58)؛ يثبت وفر المشاركة المنزلية كلما كبرت الأسرة.`;
-      } else {
-        diagText = `المعامل الفعلي مرتفع (${alpha.toFixed(2)})؛ يوضح أن الاستهلاك في العائلات المحددة يقترب من التناسب الخطي المباشر مع عدد الأفراد.`;
-      }
-      document.getElementById('alphaEvaluation').textContent = diagText;
-    }
-
-    /* ==================== 7. محاكي التوزيع والرسم البياني ==================== */
-    function applyEmpiricalAlphaToSim() {
-      const slider = document.getElementById('simAlphaSlider');
-      slider.value = currentEmpiricalAlpha.toFixed(2);
-      updateSimulator();
-    }
-
-    function roundShare(val, step) {
-      return step > 1 ? Math.round(val / step) * step : Math.round(val);
-    }
-
-    function updateSimulator() {
-      if (!processedState) return;
-      const simAlpha = parseFloat(document.getElementById('simAlphaSlider').value) || 0;
-      const simNetWater = parseFloat(document.getElementById('simNetWaterInput').value) || 3600;
-      const roundStep = parseInt(document.getElementById('simRoundingSelect').value) || 1;
-
-      document.getElementById('simAlphaLabel').textContent = simAlpha.toFixed(2);
-
-      const { sizeMap, familyMap } = processedState;
-      const famList = Object.values(familyMap).sort((a, b) => (parseInt(a.tent) || a.id) - (parseInt(b.tent) || b.id));
-
-      const totalWeight = famList.reduce((acc, f) => acc + Math.pow(f.members, simAlpha), 0);
-
-      const simBody = document.getElementById('simulatorTableBody');
-      simBody.innerHTML = '';
-
-      const simShareByMembers = {};
-
-      famList.forEach(f => {
-        const rawShare = totalWeight > 0 ? simNetWater * (Math.pow(f.members, simAlpha) / totalWeight) : 0;
-        const simShare = roundShare(rawShare, roundStep);
-        simShareByMembers[f.members] = simShare;
-
-        const activeAvg = f.validCyclesCount > 0
-          ? (f.validCyclesLitres / f.validCyclesCount)
-          : (f.activeCyclesCount > 0 ? (f.totalLitres / f.activeCyclesCount) : 0);
-
-        const actualPerCapita = f.members > 0 ? (activeAvg / f.members) : 0;
-        const simPerCapita = f.members > 0 ? (simShare / f.members) : 0;
-
-        const diff = simShare - activeAvg;
-        const diffSign = diff >= 0 ? '+' : '';
-        const diffClass = diff >= -10 ? 'tag-green' : 'tag-red';
-        const diffLabel = diff >= 0 ? `فائض ${diffSign}${Math.round(diff)} لتر` : `عجز ${Math.round(diff)} لتر`;
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><span class="tag tag-amber">خيمة <span class="num">${f.tent}</span></span></td>
-          <td><strong>${f.name}</strong></td>
-          <td><span class="num">${f.members}</span> أفراد</td>
-          <td><strong class="num">${activeAvg.toFixed(0)}</strong> لتر</td>
-          <td style="color:var(--primary); font-weight:800; font-size:0.96rem;"><span class="num">${simShare}</span> لتر</td>
-          <td><span class="tag tag-blue"><span class="num">${actualPerCapita.toFixed(1)}</span> لتر/فرد</span></td>
-          <td><strong class="num" style="color:var(--warning);">${simPerCapita.toFixed(1)}</strong> لتر/فرد</td>
-          <td><span class="tag ${diffClass}">${diffLabel}</span></td>
-        `;
-        simBody.appendChild(tr);
-      });
-
-      renderElasticityAnalysis(sizeMap, simShareByMembers, simAlpha);
-    }
-
-    function renderElasticityAnalysis(sizeMap, simShareByMembers, simAlpha) {
-      const sizes = Object.keys(sizeMap).map(Number).sort((a,b) => a - b);
-      const eBody = document.getElementById('elasticityTableBody');
-      eBody.innerHTML = '';
-
-      const labels = [];
-      const actualFamilyAvgs = [];
-      const actualPerCapitaAvgs = [];
-      const simulatedShares = [];
-
-      sizes.forEach((s, idx) => {
-        const total = sizeMap[s].totalLitres;
-        const occ = sizeMap[s].occurrences;
-        const famAvg = total / occ;
-        const perCapita = famAvg / s;
-        const simShare = simShareByMembers[s] || 0;
-
-        labels.push(s + ' أفراد');
-        actualFamilyAvgs.push(famAvg.toFixed(1));
-        actualPerCapitaAvgs.push(perCapita.toFixed(1));
-        simulatedShares.push(simShare);
-
-        let savingText = '—';
-        if (idx > 0 && sizes[idx-1]) {
-          const prevCapita = sizeMap[sizes[idx-1]].totalLitres / sizeMap[sizes[idx-1]].occurrences / sizes[idx-1];
-          const diff = prevCapita - perCapita;
-          savingText = diff > 0
-            ? `<span style="color:var(--success); font-weight:700;">وفر ${diff.toFixed(1)} لتر/فرد</span>`
-            : `<span style="color:var(--warning); font-weight:700;">زيادة ${Math.abs(diff).toFixed(1)} لتر/فرد</span>`;
-        }
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td><strong>أسرة من <span class="num">${s}</span> أفراد</strong></td>
-          <td><span class="num">${occ}</span> سجل نشط</td>
-          <td style="font-weight:800; color:var(--primary);"><span class="num">${famAvg.toFixed(1)}</span> لتر</td>
-          <td><span class="tag tag-blue"><span class="num">${perCapita.toFixed(1)}</span> لتر / فرد</span></td>
-          <td style="font-weight:800; color:var(--warning);"><span class="num">${simShare}</span> لتر</td>
-          <td>${savingText}</td>
-        `;
-        eBody.appendChild(row);
-      });
-
-      const styles = getComputedStyle(document.documentElement);
-      const gridColor = styles.getPropertyValue('--chart-grid').trim() || '#233554';
-      const textColor = styles.getPropertyValue('--chart-text').trim() || '#94a3b8';
-
-      const ctx = document.getElementById('elasticityChart').getContext('2d');
-      if (elasticityChartInstance) elasticityChartInstance.destroy();
-
-      elasticityChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: 'متوسط سحب الأسرة الفعلي (لتر)',
-              data: actualFamilyAvgs,
-              borderColor: '#0284c7',
-              backgroundColor: 'rgba(2, 132, 199, 0.14)',
-              borderWidth: 3,
-              tension: 0.3,
-              yAxisID: 'y',
-              fill: true
-            },
-            {
-              label: `حصة المحاكي المقترحة (α = ${simAlpha.toFixed(2)})`,
-              data: simulatedShares,
-              borderColor: '#f59e0b',
-              borderWidth: 2.5,
-              borderDash: [5, 5],
-              tension: 0.3,
-              yAxisID: 'y',
-              fill: false
-            },
-            {
-              label: 'نصيب الفرد الفعلي (لتر / فرد)',
-              data: actualPerCapitaAvgs,
-              borderColor: '#10b981',
-              borderWidth: 2.5,
-              borderDash: [3, 3],
-              tension: 0.3,
-              yAxisID: 'y1'
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              type: 'linear',
-              position: 'left',
-              title: { display: true, text: 'استهلاك وحصة الأسرة (لتر)', color: textColor },
-              grid: { color: gridColor },
-              ticks: { color: textColor }
-            },
-            y1: {
-              type: 'linear',
-              position: 'right',
-              title: { display: true, text: 'نصيب الفرد الواحد (لتر)', color: '#10b981' },
-              grid: { drawOnChartArea: false },
-              ticks: { color: '#10b981' }
-            },
-            x: {
-              grid: { color: gridColor },
-              ticks: { color: textColor }
-            }
-          },
-          plugins: {
-            legend: { labels: { color: textColor, font: { family: 'Cairo', weight: 'bold' } } }
-          }
-        }
-      });
-    }
-
-    /* ==================== 8. جدول أداء العائلات وحصة الفرد والفرز التفاعلي ==================== */
-    function getHeatTintStyle(perCapitaVal) {
-      const min = 15, max = 95;
-      const ratio = Math.max(0, Math.min(1, (perCapitaVal - min) / (max - min)));
-      const alpha = (0.08 + ratio * 0.22).toFixed(2);
-      if (ratio > 0.65) {
-        return `background: rgba(245, 158, 11, ${alpha}); border-color: rgba(245, 158, 11, 0.35);`;
-      }
-      return `background: rgba(56, 189, 248, ${alpha}); border-color: rgba(56, 189, 248, 0.35);`;
-    }
-
-    function sortFamiliesBy(field) {
-      if (familySortState.field === field) {
-        familySortState.asc = !familySortState.asc;
-      } else {
-        familySortState.field = field;
-        // الترتيب تصاعدي للخيمة والاسم، وتنازلي لبقية الأرقام (الأعلى أولاً)
-        familySortState.asc = (field === 'tent' || field === 'name');
-      }
-      renderFamiliesTable();
-    }
-
-    function renderFamiliesTable() {
-      if (!processedState) return;
-      const { familyMap } = processedState;
-      const fBody = document.getElementById('familiesTableBody');
-      fBody.innerHTML = '';
-
-      // تحديث أسهم الترتيب لكافة الأعمدة
-      ['tent', 'name', 'members', 'activeCycles', 'totalLitres', 'perCapitaCumulative', 'activeAvg', 'perCapitaActive', 'quotaUtil'].forEach(k => {
-        const el = document.getElementById(`sort-${k}`);
-        if (el) el.textContent = familySortState.field === k ? (familySortState.asc ? '▲' : '▼') : '';
-      });
-
-      const enrichedList = Object.values(familyMap).map(fam => {
-        const activeAvg = fam.activeCyclesCount > 0 ? (fam.totalLitres / fam.activeCyclesCount) : 0;
-        const perCapitaActive = fam.members > 0 ? (activeAvg / fam.members) : 0;
-        const perCapitaCumulative = fam.members > 0 ? (fam.totalLitres / fam.members) : 0;
-        const perCapitaDaily = (fam.members > 0 && fam.activeDurationDays > 0)
-          ? ((fam.totalLitres / fam.members) / fam.activeDurationDays)
-          : 0;
-        const quotaUtil = fam.totalAllocatedInActive > 0 ? ((fam.totalLitres / fam.totalAllocatedInActive) * 100) : 0;
-        const avgPullSize = fam.totalPullsCount > 0 ? Math.round(fam.totalLitres / fam.totalPullsCount) : 0;
-
-        return {
-          ...fam,
-          tentNum: parseInt(fam.tent) || fam.id || 0,
-          activeAvg,
-          perCapitaActive,
-          perCapitaCumulative,
-          perCapitaDaily,
-          quotaUtil,
-          avgPullSize
-        };
-      });
-
-      enrichedList.sort((a, b) => {
-        const f = familySortState.field;
-        let vA, vB;
-        if (f === 'tent') { vA = a.tentNum; vB = b.tentNum; }
-        else if (f === 'name') return familySortState.asc ? a.name.localeCompare(b.name, 'ar') : b.name.localeCompare(a.name, 'ar');
-        else if (f === 'activeCycles') { vA = a.activeCyclesCount; vB = b.activeCyclesCount; }
-        else { vA = a[f]; vB = b[f]; }
-        return familySortState.asc ? (vA - vB) : (vB - vA);
-      });
-
-      enrichedList.forEach(fam => {
-        let pullPattern = 'لا يوجد سحب';
-        if (fam.totalPullsCount > 0) {
-          pullPattern = fam.avgPullSize >= 100
-            ? `خزان فرعي (${fam.totalPullsCount} سحبة، م: ${fam.avgPullSize} لتر)`
-            : `جالونات (${fam.totalPullsCount} سحبة، م: ${fam.avgPullSize} لتر)`;
-        }
-
-        const utilClass = fam.quotaUtil > 105 ? 'tag-red' : (fam.quotaUtil >= 85 ? 'tag-amber' : 'tag-green');
-        const heatStyle = getHeatTintStyle(fam.perCapitaActive);
-
-        const row = document.createElement('tr');
-        row.className = 'clickable-row';
-        row.title = 'اضغط لعرض سجل السحوبات بالأوعية';
-        row.onclick = () => openFamilyModal(fam.key);
-
-        row.innerHTML = `
-          <td><span class="tag tag-amber">خيمة <span class="num">${fam.tent}</span></span></td>
-          <td><strong>${fam.name}</strong></td>
-          <td><span class="num">${fam.members}</span> أفراد</td>
-          <td><span class="num">${fam.activeCyclesCount}</span> من <span class="num">${fam.totalCyclesCount}</span></td>
-          <td><strong class="num">${fam.totalLitres}</strong> لتر</td>
-          <td>
-            <span class="tag tag-blue" style="font-size:0.84rem;">
-              <strong class="num">${fam.perCapitaCumulative.toFixed(1)}</strong> لتر/فرد
-            </span>
-          </td>
-          <td><strong class="num" style="color:var(--primary); font-size:0.95rem;">${fam.activeAvg.toFixed(1)}</strong> لتر/دورة</td>
-          <td>
-            <div class="per-capita-cell" style="${heatStyle}">
-              <strong class="num" style="font-size:0.96rem; color:var(--text);">${fam.perCapitaActive.toFixed(1)}</strong> <small>لتر/دورة</small>
-              <span class="sub-metric">يومياً: <span class="num">${fam.perCapitaDaily.toFixed(1)}</span> لتر/يوم</span>
-            </div>
-          </td>
-          <td><span class="tag ${utilClass}"><span class="num">${fam.quotaUtil.toFixed(0)}%</span> من الحصة</span></td>
-          <td style="font-size:0.8rem; color:var(--text-secondary); font-weight:600;">🔍 ${pullPattern}</td>
-        `;
-        fBody.appendChild(row);
-      });
-    }
-
-    /* ==================== 9. جدول أرشيف الدورات ==================== */
-    function renderCyclesTable(cyclesList) {
-      const cBody = document.getElementById('cyclesTableBody');
-      cBody.innerHTML = '';
-      const sorted = [...cyclesList].sort((a,b) => b.timestamp - a.timestamp);
-
-      sorted.forEach(c => {
-        const pct = c.netWater > 0 ? ((c.consumed / c.netWater) * 100).toFixed(1) : 0;
-        const cyclePerCapita = c.pop > 0 ? (c.consumed / c.pop).toFixed(1) : '—';
-        const dailyPerCap = (c.pop > 0 && c.durationDays > 0) ? ((c.consumed / c.pop) / c.durationDays).toFixed(1) : '—';
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td><strong>${c.date}</strong></td>
-          <td><span class="num">${c.durationDays.toFixed(1)}</span> يوم <small style="color:var(--text-secondary);">(<span class="num">${Math.round(c.durationHours)}</span> س)</small></td>
-          <td><span class="num">${c.pop}</span> فرد</td>
-          <td>
-            <strong class="num">${c.netWater}</strong> لتر
-            <span class="sub-metric">الاحتياطي المخصوم: <span class="num">${c.reserveWater}</span> لتر</span>
-          </td>
-          <td style="color:var(--primary); font-weight:800;"><span class="num">${c.consumed}</span> لتر</td>
-          <td><span class="tag tag-green"><span class="num">${pct}%</span></span></td>
-          <td><strong class="num">${cyclePerCapita}</strong> لتر/فرد</td>
-          <td><span class="tag tag-blue"><span class="num">${dailyPerCap}</span> لتر/يوم</span></td>
-          <td>${getDistModeLabel(c.mode)}</td>
-        `;
-        cBody.appendChild(row);
-      });
-    }
-
-    function getDistModeLabel(m) {
-      if (m === 'elasticity') return 'مرونة وفورات الحجم (α)';
-      if (m === 'per_capita') return 'بالتساوي لكل فرد';
-      return 'بالتساوي لكل عائلة';
-    }
-
-    /* ==================== 10. النافذة السفلية لسجل الأوعية ودعم زر الرجوع ==================== */
-    function openFamilyModal(famKey) {
-      if (!processedState || !processedState.familyMap[famKey]) return;
-      const fam = processedState.familyMap[famKey];
-
-      document.getElementById('modalFamilyTitle').textContent = `⛺ خيمة ${fam.tent}: عائلة ${fam.name} (${fam.members} أفراد)`;
-      const activeAvg = fam.activeCyclesCount > 0 ? (fam.totalLitres / fam.activeCyclesCount) : 0;
-      const perCapita = fam.members > 0 ? (activeAvg / fam.members) : 0;
-      const perCapitaCum = fam.members > 0 ? (fam.totalLitres / fam.members) : 0;
-      document.getElementById('modalFamilySub').textContent =
-        `إجمالي السحب: ${fam.totalLitres} لتر | للفرد تراكمياً: ${perCapitaCum.toFixed(1)} لتر | متوسط الدورة: ${activeAvg.toFixed(1)} لتر | حصة الفرد بالدورة: ${perCapita.toFixed(1)} لتر/دورة`;
-
-      const body = document.getElementById('modalLogsBody');
-      body.innerHTML = '';
-
-      fam.cycleHistory.forEach(ch => {
-        const box = document.createElement('div');
-        box.className = 'log-cycle-group';
-
-        const perCapCycle = fam.members > 0 ? (ch.consumed / fam.members).toFixed(1) : 0;
-        let logsHtml = '';
-
-        if (!ch.logs || ch.logs.length === 0) {
-          logsHtml = `<div style="color:var(--text-secondary); font-size:0.84rem; padding:6px 0;">لم يتم تسجيل أي سحوبات في هذه الدورة (0 لتر).</div>`;
-        } else {
-          const sortedLogs = [...ch.logs].sort((a, b) => (b.timestamp || b.id || 0) - (a.timestamp || a.id || 0));
-          sortedLogs.forEach((l, idx) => {
-            const ts = parseInt(l.timestamp || l.id) || 0;
-            const timeStr = ts > 0
-              ? new Date(ts).toLocaleString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-              : `سحبة ${idx + 1}`;
-            const detailStr = l.detail ? `الأوعية: (${l.detail})` : 'سحب مباشر بدون تفصيل أوعية';
-
-            logsHtml += `
-              <div class="log-item">
-                <div>
-                  <strong style="color:var(--primary); font-size:0.92rem;"><span class="num">${l.amount}</span> لتر</strong>
-                  <span style="margin-right:10px; color:var(--text); direction:ltr; display:inline-block; font-weight:600;">${detailStr}</span>
-                </div>
-                <span style="color:var(--text-secondary); font-size:0.78rem;">🕒 ${timeStr}</span>
-              </div>
-            `;
-          });
-        }
-
-        box.innerHTML = `
-          <div class="log-cycle-header">
-            <span>🗓️ ${ch.cycleTitle}</span>
-            <div>
-              <span class="tag tag-blue">المسحوب: <span class="num">${ch.consumed}</span> لتر (<span class="num">${perCapCycle}</span> لتر/فرد)</span>
-              <span class="tag tag-amber" style="margin-right:4px;">الحصة المقررة: <span class="num">${ch.allocated}</span> لتر</span>
-            </div>
-          </div>
-          ${logsHtml}
-        `;
-        body.appendChild(box);
-      });
-
-      document.getElementById('logsModalBackdrop').classList.add('open');
-      if (!modalOpenState) {
-        history.pushState({ modal: 'familyLogs' }, '');
-        modalOpenState = true;
-      }
-    }
-
-    function closeFamilyModal(fromPopState = false) {
-      const backdrop = document.getElementById('logsModalBackdrop');
-      if (!backdrop.classList.contains('open')) return;
-      backdrop.classList.remove('open');
-      if (modalOpenState && !fromPopState) {
-        modalOpenState = false;
-        history.back();
-      } else {
-        modalOpenState = false;
-      }
-    }
-
-    window.addEventListener('popstate', () => {
-      if (modalOpenState) {
-        closeFamilyModal(true);
-      }
-    });
-
-    /* ==================== 11. تصدير ملف الإكسل الشامل (CSV) ==================== */
-    function exportToCSV() {
-      if (!rawHistoryData || Object.keys(rawHistoryData).length === 0) {
-        alert('لا توجد بيانات لتصديرها');
-        return;
-      }
-
-      let csv = '\uFEFF';
-      csv += 'الدورة,تاريخ الإغلاق,صافي المياه المتاحة,الاحتياطي,رقم الخيمة,اسم العائلة,عدد الأفراد,المستهلك للأسرة (لتر),حصة الفرد في الدورة (لتر),عدد مرات السحب,تفاصيل السحوبات بالأوعية\n';
-
-      Object.keys(rawHistoryData).forEach((key, idx) => {
-        const c = rawHistoryData[key];
-        const date = c.closedAtStr || '';
-        const summary = c.summary || {};
-        const settings = c.settings || {};
-        const totalW = summary.totalWater || settings.totalWater || 0;
-        const resW = summary.reserveLiters !== undefined ? summary.reserveLiters : (settings.reserveLiters || 0);
-        const netW = Math.max(0, totalW - resW);
-
-        (c.families || []).forEach((f, fIdx) => {
-          const tent = f.tent || String(f.id || (fIdx + 1));
-          const members = parseInt(f.members) || 0;
-          const consumed = parseFloat(f.consumed) || 0;
-          const perCapita = members > 0 ? (consumed / members).toFixed(1) : 0;
-          const logs = f.logs || [];
-          const logsSummary = logs.map(l => l.detail ? `[${l.detail}]` : l.amount).join(' | ');
-          csv += `دورة ${idx + 1},"${date}",${netW},${resW},"${tent}","${f.name}",${members},${consumed},${perCapita},${logs.length},"${logsSummary}"\n`;
-        });
-      });
-
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `تحليلات_مياه_المخيم_${new Date().toISOString().slice(0,10)}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-  </script>
+        return `<span class="badge badge-ok">تشغيلة ${b.batchNo} (${b.remaining}): آمنة حتى ${b.expiry}</span>`;
+      }).join('<br>');
+
+      return `<tr>
+        <td><strong>${item.name}</strong><br><small>${item.active}</small></td>
+        <td>${totalIn}</td>
+        <td>${totalOut}</td>
+        <td><strong>${validRem}</strong></td>
+        <td><input type="number" value="${validRem}" style="width:75px;" oninput="calcVariance(this, ${validRem})"></td>
+        <td><span class="badge badge-ok">مطابق (0)</span></td>
+        <td>${batchAnalysis || 'لا يوجد رصيد'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  const activeBatches = db.batches.filter(b => b.remaining > 0).sort((a,b) => new Date(a.expiry) - new Date(b.expiry));
+  const destBatchEl = document.getElementById('destBatch');
+  if (destBatchEl) {
+    destBatchEl.innerHTML = activeBatches.map(b => {
+      const item = db.items.find(i => i.id === b.itemId);
+      const isExp = b.expiry <= todayStr ? ' [منتهية الصلاحية]' : '';
+      return `<option value="${b.batchId}">${item ? item.name : ''} - تشغيلة ${b.batchNo} (متبقي: ${b.remaining} | انتهاء: ${b.expiry})${isExp}</option>`;
+    }).join('');
+  }
+
+  const destBody = document.getElementById('destroyTableBody');
+  if (destBody) {
+    destBody.innerHTML = db.destructions.map(d => `
+      <tr>
+        <td>${d.date}</td>
+        <td>${d.itemName}</td>
+        <td>${d.batchNo}</td>
+        <td>${d.expiry}</td>
+        <td><strong>${d.qty}</strong></td>
+        <td>${d.info}</td>
+      </tr>
+    `).join('');
+  }
+
+  checkItemAvailability();
+}
+
+// تهيئة أولية آمنة
+document.addEventListener('DOMContentLoaded', () => {
+  const dispDateEl = document.getElementById('dispDate');
+  const recDateEl = document.getElementById('recDate');
+  const printDateEl = document.getElementById('printDate');
+  const apiKeyEl = document.getElementById('apiKeyInput');
+
+  if (dispDateEl) dispDateEl.value = todayStr;
+  if (recDateEl) recDateEl.value = todayStr;
+  if (printDateEl) printDateEl.innerText = todayStr;
+  if (apiKeyEl) apiKeyEl.value = safeStorage.getItem('GeminiAPIKey') || '';
+
+  renderAll();
+});
+</script>
 </body>
 </html>
